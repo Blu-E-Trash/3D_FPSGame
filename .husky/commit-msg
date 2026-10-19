@@ -1,0 +1,42 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+## husky task runner examples -------------------
+## Note : for local installation use 'dotnet' prefix. e.g. 'dotnet husky'
+
+## run all tasks
+#husky run
+
+### run all tasks with group: 'group-name'
+#husky run --group group-name
+
+## run task with name: 'task-name'
+#husky run --name task-name
+
+## pass hook arguments to task
+#husky run --args "$1" "$2"
+
+## or put your custom commands -------------------
+#echo 'Husky.Net is awesome!'
+
+grep -qE '^(asset|design|build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test|setting)(\(.+\))?!?: .+' "$1" && exit 0
+echo "커밋 메시지는 'type: 설명' 형식이어야 합니다."
+exit 1
+
+# 제목을 제외하고, 빈 줄과 주석을 뺀 본문 줄 수 계산
+body_lines=$(awk '
+    NR > 1 && $0 !~ /^[[:space:]]*$/ && $0 !~ /^#/ {
+        count++
+    }
+    END {
+        print count + 0
+    }
+' "$1")
+
+# 본문 최소 2줄 검사
+if [ "$body_lines" -lt 2 ]; then
+    echo "커밋 메시지 본문은 빈 줄과 주석을 제외하고 2줄 이상 작성해야 합니다."
+    exit 1
+fi
+
+exit 0
