@@ -14,7 +14,6 @@ public class FPSCameraRotate : MonoBehaviour
         // 1. 마우스 입력을 받아옵니다.
         float mouseX = Input.GetAxis("Mouse X");
         float mouseY = Input.GetAxis("Mouse Y");
-        Debug.Log($"Mouse X: {mouseX}, Mouse Y: {mouseY}");
 
         // 2, 마우스 입력을 기반으로 카메라 회전 방향을 구한다.
         //Vector3 dir = new Vector3(-mouseY, mouseX, 0f);
