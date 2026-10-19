@@ -1,7 +1,7 @@
 using UnityEngine;
 
 // 마우스를 움직이면 카메라를 그 방향으로 회전하고 싶다
-public class FPSCameraRotate : MonoBehaviour
+public class CameraRotate : MonoBehaviour
 {
     [SerializeField]
     private float _rotationSpeed = 200f;
