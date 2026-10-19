@@ -4,7 +4,7 @@
 
 코드 리뷰를 수행할 때 다음 문서의 규칙을 반드시 적용한다.
 
-@./.gemini/styleguide.md
+@./Docs/CodeReviewGuide.md
 
 ## 추가 지침
 
