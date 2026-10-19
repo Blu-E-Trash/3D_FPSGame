@@ -7,8 +7,6 @@ public class PlayerMove : MonoBehaviour
 
     [SerializeField]
     private float _moveSpeed = 7f;
-    [SerializeField]
-    private float _jumpPower = 5f;
 
     private CharacterController _characterController;
     private float _yVelocity;
@@ -21,30 +19,23 @@ public class PlayerMove : MonoBehaviour
     private void Update()
     {
         // 1. 플레이어 이동 입력을 받아옵니다.
-        float horizontal = Input.GetAxis("Horizontal");
-        float vertical = Input.GetAxis("Vertical");
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");
 
         // 2. 플레이어 이동 방향을 구합니다.
         Vector3 moveDir = new Vector3(horizontal, 0f, vertical).normalized;
+        moveDir = transform.TransformDirection(moveDir); // 플레이어가 바라보는 방향 기준으로 바꾼다.
 
-        // 3. 땅에 있으면 낙하 속도를 초기화하고, 점프 입력을 받습니다.
-        if (_characterController.isGrounded)
+        // 3. 땅에 있으면 낙하 속도를 초기화합니다.
+        if (_characterController.isGrounded && _yVelocity < 0f)
         {
-            if (_yVelocity < 0f)
-            {
-                _yVelocity = GroundedYVelocity;
-            }
-
-            if (Input.GetButtonDown("Jump"))
-            {
-                _yVelocity = _jumpPower;
-            }
+            _yVelocity = GroundedYVelocity;
         }
 
         // 4. 중력을 적용합니다.
         _yVelocity += Gravity * Time.deltaTime;
 
-        // 5. CharacterController로 이동합니다. (Step Offset / Slope Limit / 벽 충돌 적용)
+        // 5. CharacterController로 이동합니다.
         Vector3 velocity = moveDir * _moveSpeed;
         velocity.y = _yVelocity;
         _characterController.Move(velocity * Time.deltaTime);

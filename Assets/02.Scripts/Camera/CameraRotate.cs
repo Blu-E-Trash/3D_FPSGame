@@ -1,45 +1,43 @@
 using UnityEngine;
 
-// 마우스를 움직이면 카메라를 그 방향으로 회전하고 싶다
+// 마우스 위아래 움직임으로 카메라를 위아래로 회전하고,
+// 좌우 방향은 플레이어 몸의 방향을 그대로 따라간다.
 public class CameraRotate : MonoBehaviour
 {
-    [SerializeField]
-    private float _rotationSpeed = 200f;
+    private const float MaxPitch = 89f;
 
-    private float _acculationX = 0f; // 좌우
+    [SerializeField]
+    private Transform _player;
+    [SerializeField]
+    private float _mouseSensitivity = 3f;
+
     private float _acculationY = 0f; // 위아래
 
-    private void Update()
+    private void Awake()
     {
-        // 1. 마우스 입력을 받아옵니다.
-        float mouseX = Input.GetAxis("Mouse X");
+        if (_player == null)
+        {
+            GameLogger.LogError("CameraRotate: Player is not assigned.");
+        }
+    }
+
+    // 플레이어가 Update에서 회전한 뒤에 방향을 맞추기 위해 LateUpdate에서 처리한다.
+    private void LateUpdate()
+    {
+        // 1. 마우스 입력을 받아온다.
         float mouseY = Input.GetAxis("Mouse Y");
 
-        // 2, 마우스 입력을 기반으로 카메라 회전 방향을 구한다.
-        //Vector3 dir = new Vector3(-mouseY, mouseX, 0f);
-        // 2. 마우스 입력을 기반으로 회전값을 누적한다.
-        _acculationX += mouseX * _rotationSpeed * Time.deltaTime;
-        _acculationY += mouseY * _rotationSpeed * Time.deltaTime;
+        GameLogger.Log($"Mouse Y: {mouseY}");
 
-        // 3. 누적하기 전에 내 변수에서 먼저 -90 ~ 90도로 제한.
-        _acculationY = Mathf.Clamp(_acculationY, -90f, 90f); // 위아래 회전값을 -90도 ~ 90도로 제한한다.
+        // 2. 위아래 회전값을 누적하고 -89도 ~ 89도로 제한한다.
+        // transform.eulerAngles는 0~360도로 돌려주기 때문에(-1도 -> 359도) 내 변수에서 먼저 제한한다.
+        _acculationY += mouseY * _mouseSensitivity;
+        _acculationY = Mathf.Clamp(_acculationY, -MaxPitch, MaxPitch);
 
-        // 4. 누적한 회전값을 카메라에 적용한다.
-        transform.eulerAngles = new Vector3(-_acculationY, _acculationX, 0f);
+        // 3. 좌우는 플레이어 몸 방향을 그대로 쓴다. (얼굴과 카메라 방향이 항상 일치)
+        float yaw = _player != null ? _player.eulerAngles.y : transform.eulerAngles.y;
 
-
-        // 3. 카메라를 회전시킨다.
-        // 새로운 각도 = 현재 각도 + 회전 속도 * 시간
-        //transform.eulerAngles += dir * _rotationSpeed * Time.deltaTime;
-
-        // 4. 위 아래 회전값을 -90도 ~ 90도로 제한한다.
-        //Vector3 currentRotation = transform.eulerAngles;
-
-        // 정면: 0도
-        // 하늘을 살짝 1도만큼 쳐다보면: -1 -> 359
-        // 유니티는 0~360도로 회전값을 표현하기 때문에 음수는 자동으로 변환되어서 반환한다.
-
-        //currentRotation.x = Mathf.Clamp(currentRotation.x, -90f, 90f);
-        //transform.eulerAngles = currentRotation;
+        // 4. 회전값을 카메라에 적용한다.
+        transform.eulerAngles = new Vector3(-_acculationY, yaw, 0f);
     }
 }
