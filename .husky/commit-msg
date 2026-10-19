@@ -19,7 +19,7 @@
 ## or put your custom commands -------------------
 #echo 'Husky.Net is awesome!'
 
-grep -qE '^(asset|design|build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test|setting)(\(.+\))?!?: .+' "$1" && exit 0
+grep -qE '^(asset|design|build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test|setting|remove)(\(.+\))?!?: .+' "$1" && exit 0
 echo "커밋 메시지는 'type: 설명' 형식이어야 합니다."
 exit 1
 
