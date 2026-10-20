@@ -4,6 +4,7 @@ using UnityEngine;
 public class PlayerMove : MonoBehaviour
 {
     private const float Gravity = -20f;
+    private const float GroundedYVelocity = -2f; // 땅에 있을 때 바닥에 붙어 있도록 살짝 아래로 누르는 속도
     private float _yVelocity = 0f;  // 위아래 속도, 매 프레임마다 중력 가속도가 붙는다.
 
     [SerializeField] private float _moveSpeed = 7f;
@@ -29,8 +30,12 @@ public class PlayerMove : MonoBehaviour
         // 로컬 좌표계: 한 대상을 중심
         // 월드 좌표계: 세상을 중심
 
-        // 3. 땅에 서있지 않을때만 중력을 누적한다.
-        if (_characterController.isGrounded == false)
+        // 3. 땅에 서 있으면 낙하 속도를 초기화하고, 공중이면 중력을 누적한다.
+        if (_characterController.isGrounded && _yVelocity < 0f)
+        {
+            _yVelocity = GroundedYVelocity;
+        }
+        else
         {
             _yVelocity += Gravity * Time.deltaTime;
         }
@@ -47,6 +52,12 @@ public class PlayerMove : MonoBehaviour
 
         // 6. 속도(방향과 속력)에 따라 이동한다.
         // transform.position += direction * _moveSpeed * Time.deltaTime;
-        _characterController.Move(velocity * Time.deltaTime);
+        CollisionFlags collision = _characterController.Move(velocity * Time.deltaTime);
+
+        // 7. 점프 중에 천장에 머리를 부딪히면 바로 떨어지기 시작한다.
+        if ((collision & CollisionFlags.Above) != 0 && _yVelocity > 0f)
+        {
+            _yVelocity = 0f;
+        }
     }
 }
