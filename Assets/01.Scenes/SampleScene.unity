@@ -1532,7 +1532,7 @@ MonoBehaviour:
   _moveSpeed: 7
   _runSpeed: 12
   _runStaminaPerSecond: 20
-  _jumpPower: 5
+  _jumpPower: 10
   _maxJumpCount: 2
   _jumpStaminaCost: 15
   _characterController: {fileID: 0}
@@ -1566,6 +1566,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerGunFire
   _hitEffectPrefab: {fileID: 100002, guid: 54dd9cb5740188a488b8baebbf19207c, type: 3}
+  _fireCooldown: 0.1
 --- !u!1 &1535763022
 GameObject:
   m_ObjectHideFlags: 0

@@ -9,12 +9,20 @@ public class PlayerGunFire : MonoBehaviour
     private float _range = 100f; // 총알이 날아가는 최대 거리
     private float _damage = 10f; // 총알이 적에게 입히는 피해량
 
+    [SerializeField]
+    private float _fireCooldown = 0.1f; // 발사 간격(초)
+    private float _fireTimer = 0f;      // 다음 발사까지 남은 시간
+
     private void Update()
     {
-        // 1. 좌클릭 입력받기
-        if (Input.GetButtonDown("Fire1"))
+        // 0. 쿨타임 타이머를 줄인다.
+        _fireTimer -= Time.deltaTime;
+
+        // 1. 좌클릭을 누르고 있고 && 쿨타임이 끝났으면 발사하기
+        if (Input.GetButton("Fire1") && _fireTimer <= 0f)
         {
             Fire();
+            _fireTimer = _fireCooldown;
         }
     }
 
