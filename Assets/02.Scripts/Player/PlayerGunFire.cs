@@ -3,6 +3,9 @@ using UnityEngine;
 // 마우스 좌클릭을 하면 바라보는 방향으로 총알을 발사하고 싶다.
 public class PlayerGunFire : MonoBehaviour
 {
+    [SerializeField]
+    private GameObject _hitEffectPrefab;
+
     private float _range = 100f; // 총알이 날아가는 최대 거리
     private float _damage = 10f; // 총알이 적에게 입히는 피해량
 
@@ -29,7 +32,9 @@ public class PlayerGunFire : MonoBehaviour
         if (isHit)
         {
             Debug.Log($"총알이 {hitInfo.collider.name}에 맞았다.");
-            // Todo. 이팩트 생성
+
+            // 이팩트 생성
+            Instantiate(_hitEffectPrefab, hitInfo.point, Quaternion.LookRotation(hitInfo.normal));
         }
     }
 
