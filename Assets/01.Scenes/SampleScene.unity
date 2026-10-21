@@ -399,7 +399,7 @@ GameObject:
   - component: {fileID: 296736715}
   - component: {fileID: 296736714}
   - component: {fileID: 296736713}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Sphere
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -511,7 +511,7 @@ GameObject:
   - component: {fileID: 329015426}
   - component: {fileID: 329015425}
   - component: {fileID: 329015424}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: LeftEyebrow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -745,6 +745,37 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraFollow
   _target: {fileID: 669912899}
+--- !u!1 &363917327
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 363917328}
+  m_Layer: 7
+  m_Name: ThrowPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: -5487077368411116049, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &363917328
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 363917327}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.463, z: 0.497}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 941263696}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &366627143
 GameObject:
   m_ObjectHideFlags: 0
@@ -757,7 +788,7 @@ GameObject:
   - component: {fileID: 366627147}
   - component: {fileID: 366627146}
   - component: {fileID: 366627145}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: RightEyebrow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -979,7 +1010,7 @@ GameObject:
   - component: {fileID: 445945501}
   - component: {fileID: 445945500}
   - component: {fileID: 445945499}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: RightEyebrow (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1201,7 +1232,7 @@ GameObject:
   m_Component:
   - component: {fileID: 669912899}
   - component: {fileID: 669912900}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: CameraPotiotion
   m_TagString: Untagged
   m_Icon: {fileID: 3306451490063965843, guid: 0000000000000000d000000000000000, type: 0}
@@ -1223,6 +1254,25 @@ Transform:
   m_Children: []
   m_Father: {fileID: 941263696}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &669912900
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 669912898}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 487fbd85135f4598982d7de2dbe64e2d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraLandingDip
+  _playerMove: {fileID: 941263698}
+  _minFallSpeed: 4
+  _maxFallSpeed: 25
+  _minDipSpeed: 0.6
+  _maxDipSpeed: 2.5
+  _stiffness: 200
+  _damping: 22
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -1390,12 +1440,13 @@ GameObject:
   - component: {fileID: 941263696}
   - component: {fileID: 941263697}
   - component: {fileID: 941263698}
+  - component: {fileID: 941263701}
   - component: {fileID: 941263700}
   - component: {fileID: 941263695}
   - component: {fileID: 941263694}
   - component: {fileID: 941263693}
   - component: {fileID: 941263699}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1503,6 +1554,7 @@ Transform:
   - {fileID: 329015423}
   - {fileID: 1735262337}
   - {fileID: 669912899}
+  - {fileID: 363917328}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &941263697
@@ -1536,6 +1588,10 @@ MonoBehaviour:
   _jumpPower: 10
   _maxJumpCount: 2
   _jumpStaminaCost: 15
+  _fallMultiplier: 2
+  _lowJumpMultiplier: 2.5
+  _coyoteTime: 0.1
+  _jumpBufferTime: 0.1
   _characterController: {fileID: 0}
   _stamina: {fileID: 0}
 --- !u!114 &941263699
@@ -1568,6 +1624,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerGunFire
   _hitEffectPrefab: {fileID: 100002, guid: 54dd9cb5740188a488b8baebbf19207c, type: 3}
   _fireCooldown: 0.1
+  _maxAmmo: 50
+  _reloadTime: 1.5
+--- !u!114 &941263701
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 941263692}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d3e863dfb8f76154685cc9edea145b07, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerBombFire
+  _bombPrefab: {fileID: 5997482504800034573, guid: 3254a7ca5c1a8184b89d550849557eae, type: 3}
+  _firePoint: {fileID: 363917328}
+  _throwForce: 10
 --- !u!1 &1535763022
 GameObject:
   m_ObjectHideFlags: 0
@@ -1842,7 +1915,7 @@ GameObject:
   - component: {fileID: 1735262340}
   - component: {fileID: 1735262339}
   - component: {fileID: 1735262338}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: LeftEyebrow (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2526,25 +2599,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1535763023}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &669912900
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 669912898}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 487fbd85135f4598982d7de2dbe64e2d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CameraLandingDip
-  _playerMove: {fileID: 941263698}
-  _minFallSpeed: 4
-  _maxFallSpeed: 25
-  _minDipSpeed: 0.6
-  _maxDipSpeed: 2.5
-  _stiffness: 200
-  _damping: 22
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
