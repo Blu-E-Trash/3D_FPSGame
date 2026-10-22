@@ -73,6 +73,13 @@ public class PlayerGunFire : MonoBehaviour
 
             // 이팩트 생성
             Instantiate(_hitEffectPrefab, hitInfo.point, Quaternion.LookRotation(hitInfo.normal));
+
+            // 맞은 대상이 좀비라면 데미지를 준다.
+            Zombie zombie = hitInfo.collider.GetComponent<Zombie>();
+            if (zombie != null)
+            {
+                zombie.TakeDamage(_damage);
+            }
         }
     }
 
