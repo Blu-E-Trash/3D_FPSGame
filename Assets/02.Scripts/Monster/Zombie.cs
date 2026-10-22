@@ -331,39 +331,55 @@ public class Zombie : MonoBehaviour
     // 앞쪽(direction)으로 벽 감지 거리 안에 벽이 있는지. 있으면 벽의 바깥 방향(normal)을 알려준다.
     private bool IsWallAhead(Vector3 direction, out Vector3 wallNormal)
     {
-        wallNormal = Vector3.zero;
-
-        Vector3 origin = transform.position + _controller.center; // 몸통 가운데 높이에서 쏜다.
-        float radius = _controller.radius * 0.8f;                  // 몸 두께만큼 굵은 레이(구)를 쏜다.
-
-        if (Physics.SphereCast(origin, radius, direction, out RaycastHit hit, _wallCheckDistance, _obstacleLayer, QueryTriggerInteraction.Ignore))
-        {
-            if (IsWall(hit))
-            {
-                wallNormal = hit.normal;
-                wallNormal.y = 0f;
-                return true;
-            }
-        }
-        return false;
+        return FindWall(direction, _wallCheckDistance, out wallNormal);
     }
 
     // direction으로 distance만큼 가는 길이 막혀 있는지
     private bool IsBlocked(Vector3 direction, float distance)
     {
-        Vector3 origin = transform.position + _controller.center;
-        float radius = _controller.radius * 0.8f;
-
-        if (Physics.SphereCast(origin, radius, direction, out RaycastHit hit, distance, _obstacleLayer, QueryTriggerInteraction.Ignore))
-        {
-            return IsWall(hit);
-        }
-        return false;
+        return FindWall(direction, distance, out _);
     }
 
-    // 부딪힌 것이 진짜 벽인지 (플레이어나 바닥/완만한 경사면은 벽이 아니다)
+    // 몸 두께만큼 굵은 레이(구)를 쏴서 가장 가까운 "진짜 벽"을 찾는다.
+    // SphereCast는 처음 맞은 것 하나만 알려주는데, 그게 내 눈썹이나 코일 수도 있다!
+    // 그래서 SphereCastAll로 맞은 것을 전부 받아서 내 몸이 아닌 것 중에 가장 가까운 것을 고른다.
+    private bool FindWall(Vector3 direction, float distance, out Vector3 wallNormal)
+    {
+        wallNormal = Vector3.zero;
+
+        Vector3 origin = transform.position + _controller.center; // 몸통 가운데 높이에서 쏜다.
+        float radius = _controller.radius * 0.8f;
+
+        RaycastHit[] hits = Physics.SphereCastAll(origin, radius, direction, distance, _obstacleLayer, QueryTriggerInteraction.Ignore);
+
+        bool found = false;
+        float closestDistance = float.MaxValue;
+        foreach (RaycastHit hit in hits)
+        {
+            if (IsWall(hit) == false)
+            {
+                continue;
+            }
+            if (hit.distance < closestDistance)
+            {
+                closestDistance = hit.distance;
+                wallNormal = hit.normal;
+                found = true;
+            }
+        }
+
+        wallNormal.y = 0f;
+        return found;
+    }
+
+    // 부딪힌 것이 진짜 벽인지 (내 몸, 플레이어, 바닥/완만한 경사면은 벽이 아니다)
     private bool IsWall(RaycastHit hit)
     {
+        // 내 몸(눈썹, 코 같은 자식 오브젝트 포함)은 벽이 아니다.
+        if (hit.collider.transform.IsChildOf(transform))
+        {
+            return false;
+        }
         if (hit.collider.gameObject == _player)
         {
             return false;

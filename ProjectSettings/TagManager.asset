@@ -5,6 +5,8 @@ TagManager:
   serializedVersion: 3
   tags:
   - FxTemporaire
+  - Zombie
+  - Drum
   layers:
   - Default
   - TransparentFX
