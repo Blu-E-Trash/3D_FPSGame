@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 5025321200696106889}
   - component: {fileID: 6112762356971817915}
   - component: {fileID: 4216287621990925518}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Drum
   m_TagString: Drum
   m_Icon: {fileID: 0}
@@ -53,6 +53,9 @@ MonoBehaviour:
   _launchPower: 20
   _spinPower: 5
   _destoryDelay: 3
+  _explosionRadius: 5
+  _explosionDamage: 100
+  _chainDelay: 0.5
 --- !u!33 &8391118884915546434
 MeshFilter:
   m_ObjectHideFlags: 0
