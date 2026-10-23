@@ -33,8 +33,8 @@ public class PlayerHealth : MonoBehaviour, IDamageable
 
         if (IsDead)
         {
-            // Todo. 게임 오버 처리
             Debug.Log("플레이어가 죽었다.");
+            GameManager.Instance.GameOver();
         }
     }
 }

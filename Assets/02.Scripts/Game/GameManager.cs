@@ -53,4 +53,14 @@ public class GameManager : MonoBehaviour
 
         _state = GameState.Playing;
     }
+
+    // 게임 오버: 모든 조작을 멈추고 화면에 "게임오버"를 띄운다.
+    public void GameOver()
+    {
+        _state = GameState.GameOver;
+
+        _stateText.gameObject.SetActive(true);
+        _stateText.text = "게임오버";
+        _stateText.color = Color.red;
+    }
 }
