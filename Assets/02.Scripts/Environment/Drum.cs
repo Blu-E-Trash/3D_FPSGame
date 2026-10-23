@@ -5,7 +5,7 @@ using UnityEngine;
 // 체력이 0이 되면 위로 튀어오르며 폭발하는 드럼통
 // 폭발하면 주변 드럼통도 연쇄적으로 터뜨리고, 주변 좀비에게도 대미지를 준다.
 [RequireComponent(typeof(Rigidbody))]
-public class Drum : MonoBehaviour
+public class Drum : MonoBehaviour, IDamageable
 {
     [SerializeField] private ParticleSystem _explosionEffectPrefab;
 
@@ -33,9 +33,15 @@ public class Drum : MonoBehaviour
         _rigidbody = GetComponent<Rigidbody>();
     }
 
+    // 대미지를 받는다. (IDamageable 약속) 체력이 0이 되면 바로 터진다.
+    public void TakeDamage(float damage)
+    {
+        TakeDamage(damage, 0f);
+    }
+
     // 대미지를 받는다.
     // explodeDelay: 체력이 0이 되었을 때 몇 초 뒤에 터질지 (총에 맞으면 0초, 옆 드럼통 폭발에 휘말리면 조금 뒤)
-    public void Damage(float damage, float explodeDelay = 0f)
+    public void TakeDamage(float damage, float explodeDelay)
     {
         // 이미 터진(터지는 중인) 드럼통은 무시한다.
         // 이 검사 덕분에 A가 B를 터뜨리고, B가 다시 A를 터뜨리는 무한 반복이 생기지 않는다.
@@ -98,8 +104,8 @@ public class Drum : MonoBehaviour
             Drum drum = collider.GetComponentInParent<Drum>();
             if (drum != null && drum != this)
             {
-                // (같은 드럼통이 여러 번 잡혀도 Damage 맨 위 검사에서 걸러진다.)
-                drum.Damage(_explosionDamage, _chainDelay);
+                // (같은 드럼통이 여러 번 잡혀도 TakeDamage 맨 위 검사에서 걸러진다.)
+                drum.TakeDamage(_explosionDamage, _chainDelay);
                 continue;
             }
 

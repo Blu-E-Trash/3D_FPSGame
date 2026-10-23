@@ -81,7 +81,11 @@ public class PlayerGunFire : MonoBehaviour
             else if (hitInfo.collider.CompareTag("Drum"))
             {
 
-                hitInfo.collider.GetComponent<Drum>()?.Damage(_damage);
+                hitInfo.collider.GetComponent<Drum>()?.TakeDamage(_damage);
+            }
+            else
+            {
+                hitInfo.collider.GetComponent<Box>()?.TakeDamage(_damage);
             }
         }
     }

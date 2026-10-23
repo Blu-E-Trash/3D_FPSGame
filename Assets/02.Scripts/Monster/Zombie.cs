@@ -19,7 +19,7 @@ public enum ZombieState
     Death,      // 죽음: 쓰러지고 잠시 뒤 사라진다.
 }
 
-public class Zombie : MonoBehaviour
+public class Zombie : MonoBehaviour, IDamageable
 {
     [Header("스탯")]
     [SerializeField] private float _detectDistance = 8;    // 플레이어를 발견하는 거리
