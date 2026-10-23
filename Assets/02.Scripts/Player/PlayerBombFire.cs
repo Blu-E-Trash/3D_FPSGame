@@ -37,6 +37,9 @@ public class PlayerBombFire : MonoBehaviour
 
     private void Update()
     {
+        // 게임 중이 아니면(준비, 게임오버) 아무것도 하지 않는다.
+        if (GameManager.Instance.State != GameState.Playing) return;
+
         // 1. 오른쪽 버튼을 누르는 순간 && 폭탄이 남아 있으면 힘 모으기를 시작한다.
         if (Input.GetButtonDown("Fire2") && _currentBombCount > 0)
         {

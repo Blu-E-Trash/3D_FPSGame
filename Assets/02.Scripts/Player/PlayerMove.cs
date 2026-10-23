@@ -44,6 +44,9 @@ public class PlayerMove : MonoBehaviour
 
     private void Update()
     {
+        // 게임 중이 아니면(준비, 게임오버) 아무것도 하지 않는다.
+        if (GameManager.Instance.State != GameState.Playing) return;
+
         // 1. 키보드 입력을 받는다.
         float h = Input.GetAxisRaw("Horizontal"); // -1, 0, 1
         float v = Input.GetAxisRaw("Vertical"); // -1, 0, 1

@@ -24,6 +24,9 @@ public class CameraRotate : MonoBehaviour
     // 플레이어가 Update에서 회전한 뒤에 방향을 맞추기 위해 LateUpdate에서 처리한다.
     private void LateUpdate()
     {
+        // 게임 중이 아니면(준비, 게임오버) 아무것도 하지 않는다.
+        if (GameManager.Instance.State != GameState.Playing) return;
+
         // 1. 마우스 입력을 받아온다.
         float mouseY = Input.GetAxis("Mouse Y");
 
