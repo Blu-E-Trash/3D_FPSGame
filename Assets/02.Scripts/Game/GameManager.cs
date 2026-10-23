@@ -20,6 +20,7 @@ public class GameManager : MonoBehaviour
     public GameState State => _state;
 
     [SerializeField] private TextMeshProUGUI _stateText; // 화면 가운데에 상태를 알려주는 글자 (준비, 시작!)
+    [SerializeField] private CursorManager _cursorManager; // 게임오버 때 마우스 커서를 풀어주기 위해
 
     private void Awake()
     {
@@ -58,6 +59,12 @@ public class GameManager : MonoBehaviour
     public void GameOver()
     {
         _state = GameState.GameOver;
+
+        // 마우스 커서를 풀어서 화면의 버튼 등을 누를 수 있게 한다.
+        if (_cursorManager != null)
+        {
+            _cursorManager.UnlockCursor();
+        }
 
         _stateText.gameObject.SetActive(true);
         _stateText.text = "게임오버";
