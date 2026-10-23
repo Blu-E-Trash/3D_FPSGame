@@ -1,9 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 // 체력이 0이 되면 위로 튀어오르며 폭발하는 드럼통
-// 폭발하면 주변 드럼통도 연쇄적으로 터뜨리고, 주변 좀비에게도 대미지를 준다.
+// 폭발하면 주변 드럼통도 연쇄적으로 터뜨리고, 주변의 대미지를 받을 수 있는 대상(IDamageable)에게도 대미지를 준다.
 [RequireComponent(typeof(Rigidbody))]
 public class Drum : MonoBehaviour, IDamageable
 {
@@ -20,11 +21,12 @@ public class Drum : MonoBehaviour, IDamageable
     [SerializeField] private float _explosionDamage = 100f;  // 주변 드럼통에게 주는 대미지
     [SerializeField] private float _chainDelay = 0.15f;      // 옆 드럼통이 터지기까지 걸리는 시간 (도미노처럼 차례로 터지게)
 
-    [Header("좀비 대미지")]
-    [SerializeField] private float _zombieDamage = 50f;      // 폭발 반경 안의 좀비에게 주는 대미지
+    [Header("다른 대상 대미지")]
+    [FormerlySerializedAs("_zombieDamage")]
+    [SerializeField] private float _targetDamage = 50f;      // 폭발 반경 안의 드럼통이 아닌 대상(좀비, 상자 등)에게 주는 대미지
 
     [Header("폭발 대상 레이어")]
-    [SerializeField] private LayerMask _explosionLayer = ~0; // 인스펙터에서 Drum, Zombie 레이어만 골라주세요. (기본: 전부)
+    [SerializeField] private LayerMask _explosionLayer = ~0; // 인스펙터에서 대미지를 줄 레이어만 골라주세요. (기본: 전부)
 
     private Rigidbody _rigidbody;
 
@@ -85,7 +87,7 @@ public class Drum : MonoBehaviour, IDamageable
         Destroy(gameObject);
     }
 
-    // 폭발 반경 안에 있는 다른 드럼통과 좀비에게 대미지를 준다.
+    // 폭발 반경 안에 있는 대미지를 받을 수 있는 대상(IDamageable)에게 대미지를 준다.
     private void DamageNearby()
     {
         // OverlapSphere: 구 안에 들어온 콜라이더를 전부 찾아준다.
@@ -93,27 +95,30 @@ public class Drum : MonoBehaviour, IDamageable
         Collider[] colliders = Physics.OverlapSphere(transform.position, _explosionRadius, _explosionLayer, QueryTriggerInteraction.Ignore);
 
         // 좀비는 몸통(CharacterController) + 눈썹 + 코처럼 콜라이더가 여러 개다.
-        // 그대로 두면 한 좀비가 콜라이더 개수만큼 여러 번 맞으니까, 이미 때린 좀비를 기억해 둔다.
-        HashSet<Zombie> damagedZombies = new HashSet<Zombie>();
+        // 그대로 두면 한 대상이 콜라이더 개수만큼 여러 번 맞으니까, 이미 때린 대상을 기억해 둔다.
+        HashSet<IDamageable> damagedTargets = new HashSet<IDamageable>();
 
         foreach (Collider collider in colliders)
         {
             // 콜라이더가 자식 오브젝트에 붙어 있을 수도 있으니 부모까지 찾아본다.
+            // 좀비인지 상자인지 몰라도 "대미지를 받을 수 있다(IDamageable)"는 것만 알면 된다.
+            IDamageable damageable = collider.GetComponentInParent<IDamageable>();
 
-            // 1. 드럼통이면: 조금 뒤에 터지게 한다. -> 도미노처럼 퍼져나간다.
-            Drum drum = collider.GetComponentInParent<Drum>();
-            if (drum != null && drum != this)
+            // 대미지를 받을 수 없는 대상, 나 자신, 이미 때린 대상은 건너뛴다. (Add는 처음 넣을 때만 true)
+            if (damageable == null || ReferenceEquals(damageable, this) || damagedTargets.Add(damageable) == false)
             {
-                // (같은 드럼통이 여러 번 잡혀도 TakeDamage 맨 위 검사에서 걸러진다.)
-                drum.TakeDamage(_explosionDamage, _chainDelay);
                 continue;
             }
 
-            // 2. 좀비면: 대미지를 준다. (한 좀비에게 한 번만!)
-            Zombie zombie = collider.GetComponentInParent<Zombie>();
-            if (zombie != null && damagedZombies.Add(zombie)) // Add는 처음 넣을 때만 true
+            // 1. 드럼통이면: 조금 뒤에 터지게 한다. -> 도미노처럼 퍼져나간다.
+            if (damageable is Drum drum)
             {
-                zombie.TakeDamage(_zombieDamage);
+                drum.TakeDamage(_explosionDamage, _chainDelay);
+            }
+            // 2. 그 외(좀비, 상자 등): 바로 대미지를 준다.
+            else
+            {
+                damageable.TakeDamage(_targetDamage);
             }
         }
     }

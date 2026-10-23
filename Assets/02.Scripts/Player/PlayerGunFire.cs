@@ -73,20 +73,10 @@ public class PlayerGunFire : MonoBehaviour
 
             // 이팩트 생성
             Instantiate(_hitEffectPrefab, hitInfo.point, Quaternion.LookRotation(hitInfo.normal));
-            if (hitInfo.collider.CompareTag("Zombie"))
-            {
 
-                hitInfo.collider.GetComponent<Zombie>()?.TakeDamage(_damage);
-            }
-            else if (hitInfo.collider.CompareTag("Drum"))
-            {
-
-                hitInfo.collider.GetComponent<Drum>()?.TakeDamage(_damage);
-            }
-            else
-            {
-                hitInfo.collider.GetComponent<Box>()?.TakeDamage(_damage);
-            }
+            // 맞은 대상이 무엇이든 "대미지를 받을 수 있다(IDamageable)"면 대미지를 준다.
+            // (콜라이더가 좀비의 눈썹, 코 같은 자식에 붙어 있을 수도 있으니 부모까지 찾아본다)
+            hitInfo.collider.GetComponentInParent<IDamageable>()?.TakeDamage(_damage);
         }
     }
 
