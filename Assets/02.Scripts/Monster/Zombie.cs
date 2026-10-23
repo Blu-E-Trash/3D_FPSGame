@@ -112,9 +112,10 @@ public class Zombie : MonoBehaviour, IDamageable
         if (_health > 0f)
         {
             // 맞은 부위에 피 스프레이를 실행한다.
+            // 좀비의 자식으로 생성해서, 좀비가 움직여도 맞은 자리에 붙어서 같이 움직이게 한다.
             if (_bloodSprayPrefab != null)
             {
-                GameObject bloodSpray = Instantiate(_bloodSprayPrefab);
+                GameObject bloodSpray = Instantiate(_bloodSprayPrefab, transform);
                 bloodSpray.transform.position = damageInfo.HitPoint;
                 if (damageInfo.HitNormal != Vector3.zero)
                 {
