@@ -102,9 +102,32 @@ public class Bomb : MonoBehaviour
             IDamageable damageable = col.GetComponentInParent<IDamageable>();
             if (damageable != null && damagedTargets.Add(damageable))
             {
-                damageable.TakeDamage(_damage);
+                damageable.TakeDamage(CreateExplosionDamageInfo(col, _damage));
             }
         }
+    }
+
+    // 폭발 중심에서 대상 콜라이더까지의 대미지 정보를 만든다.
+    private DamageInfo CreateExplosionDamageInfo(Collider col, float damage)
+    {
+        Vector3 center = transform.position;
+        Vector3 hitPoint = col.ClosestPoint(center); // 폭발 중심에서 가장 가까운 콜라이더 표면 위치
+
+        // 맞은 자리에서 폭발 중심을 바라보는 방향
+        // (CharacterController처럼 ClosestPoint를 지원하지 않는 콜라이더는 중심 위치를 그대로 돌려줘서 방향이 0이 될 수 있다 -> 콜라이더 중심 기준으로 대신 구한다)
+        Vector3 hitNormal = center - hitPoint;
+        if (hitNormal.sqrMagnitude < 0.0001f)
+        {
+            hitPoint = col.bounds.center;
+            hitNormal = center - hitPoint;
+        }
+
+        return new DamageInfo
+        {
+            Value = damage,
+            HitPoint = hitPoint,
+            HitNormal = hitNormal.normalized
+        };
     }
 
     // 씬 뷰에서 폭탄을 선택하면 폭발 반경을 보여준다.

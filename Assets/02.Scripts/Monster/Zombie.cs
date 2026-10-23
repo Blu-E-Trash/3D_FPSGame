@@ -29,6 +29,9 @@ public class Zombie : MonoBehaviour, IDamageable
     [SerializeField] private float _moveSpeed = 5;          // 이동속도
     [SerializeField] private float _health = 30;
 
+    [Header("이펙트")]
+    [SerializeField] private GameObject _bloodSprayPrefab;
+
     [Header("순찰")]
     [SerializeField] private float _patrolRadius = 6f;      // 처음 자리에서 이 반경 안에서만 돌아다닌다.
     [SerializeField] private float _minPatrolDistance = 2f; // 한 번에 최소 이만큼은 걸어간다. (너무 짧게 찔끔 움직이지 않게)
@@ -94,20 +97,31 @@ public class Zombie : MonoBehaviour, IDamageable
     }
 
     // 대미지를 받는다.
-    public void TakeDamage(float damage)
+    public void TakeDamage(DamageInfo damageInfo)
     {
         if (_state == ZombieState.Death)
         {
             return;
         }
 
-        _health -= damage;
+        _health -= damageInfo.Value;
 
         StopAllCoroutines();
         _isLookingAround = false; // 두리번거리던 중에 맞았을 수도 있으니 정리한다.
 
         if (_health > 0f)
         {
+            // 맞은 부위에 피 스프레이를 실행한다.
+            if (_bloodSprayPrefab != null)
+            {
+                GameObject bloodSpray = Instantiate(_bloodSprayPrefab);
+                bloodSpray.transform.position = damageInfo.HitPoint;
+                if (damageInfo.HitNormal != Vector3.zero)
+                {
+                    bloodSpray.transform.forward = damageInfo.HitNormal;
+                }
+            }
+
             // 잠깐 멈칫 하고 싶다!
             Debug.Log($"{_state} -> Hit");
             _state = ZombieState.Hit;

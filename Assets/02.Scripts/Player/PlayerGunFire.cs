@@ -76,7 +76,13 @@ public class PlayerGunFire : MonoBehaviour
 
             // 맞은 대상이 무엇이든 "대미지를 받을 수 있다(IDamageable)"면 대미지를 준다.
             // (콜라이더가 좀비의 눈썹, 코 같은 자식에 붙어 있을 수도 있으니 부모까지 찾아본다)
-            hitInfo.collider.GetComponentInParent<IDamageable>()?.TakeDamage(_damage);
+            // 대미지 구조체 만들기
+            DamageInfo damageInfo = new DamageInfo();
+            damageInfo.Value = _damage;
+            damageInfo.HitPoint = hitInfo.point;
+            damageInfo.HitNormal = hitInfo.normal;
+
+            hitInfo.collider.GetComponentInParent<IDamageable>()?.TakeDamage(damageInfo);
         }
     }
 

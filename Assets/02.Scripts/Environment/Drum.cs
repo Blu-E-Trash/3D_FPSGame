@@ -36,14 +36,14 @@ public class Drum : MonoBehaviour, IDamageable
     }
 
     // 대미지를 받는다. (IDamageable 약속) 체력이 0이 되면 바로 터진다.
-    public void TakeDamage(float damage)
+    public void TakeDamage(DamageInfo damageInfo)
     {
-        TakeDamage(damage, 0f);
+        TakeDamage(damageInfo, 0f);
     }
 
     // 대미지를 받는다.
     // explodeDelay: 체력이 0이 되었을 때 몇 초 뒤에 터질지 (총에 맞으면 0초, 옆 드럼통 폭발에 휘말리면 조금 뒤)
-    public void TakeDamage(float damage, float explodeDelay)
+    public void TakeDamage(DamageInfo damageInfo, float explodeDelay)
     {
         // 이미 터진(터지는 중인) 드럼통은 무시한다.
         // 이 검사 덕분에 A가 B를 터뜨리고, B가 다시 A를 터뜨리는 무한 반복이 생기지 않는다.
@@ -52,7 +52,7 @@ public class Drum : MonoBehaviour, IDamageable
             return;
         }
 
-        _health -= damage;
+        _health -= damageInfo.Value;
 
         if (_health <= 0)
         {
@@ -113,14 +113,37 @@ public class Drum : MonoBehaviour, IDamageable
             // 1. 드럼통이면: 조금 뒤에 터지게 한다. -> 도미노처럼 퍼져나간다.
             if (damageable is Drum drum)
             {
-                drum.TakeDamage(_explosionDamage, _chainDelay);
+                drum.TakeDamage(CreateExplosionDamageInfo(collider, _explosionDamage), _chainDelay);
             }
             // 2. 그 외(좀비, 상자 등): 바로 대미지를 준다.
             else
             {
-                damageable.TakeDamage(_targetDamage);
+                damageable.TakeDamage(CreateExplosionDamageInfo(collider, _targetDamage));
             }
         }
+    }
+
+    // 폭발 중심에서 대상 콜라이더까지의 대미지 정보를 만든다.
+    private DamageInfo CreateExplosionDamageInfo(Collider col, float damage)
+    {
+        Vector3 center = transform.position;
+        Vector3 hitPoint = col.ClosestPoint(center); // 폭발 중심에서 가장 가까운 콜라이더 표면 위치
+
+        // 맞은 자리에서 폭발 중심을 바라보는 방향
+        // (CharacterController처럼 ClosestPoint를 지원하지 않는 콜라이더는 중심 위치를 그대로 돌려줘서 방향이 0이 될 수 있다 -> 콜라이더 중심 기준으로 대신 구한다)
+        Vector3 hitNormal = center - hitPoint;
+        if (hitNormal.sqrMagnitude < 0.0001f)
+        {
+            hitPoint = col.bounds.center;
+            hitNormal = center - hitPoint;
+        }
+
+        return new DamageInfo
+        {
+            Value = damage,
+            HitPoint = hitPoint,
+            HitNormal = hitNormal.normalized
+        };
     }
 
     // 씬 뷰에서 드럼통을 선택하면 폭발 반경을 보여준다.
