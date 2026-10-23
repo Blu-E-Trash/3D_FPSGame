@@ -1,4 +1,5 @@
 using System.Collections;
+using TMPro;
 using UnityEngine;
 
 // 게임의 진행 상태
@@ -18,6 +19,8 @@ public class GameManager : MonoBehaviour
     private GameState _state = GameState.Ready;
     public GameState State => _state;
 
+    [SerializeField] private TextMeshProUGUI _stateText; // 화면 가운데에 상태를 알려주는 글자 (준비, 시작!)
+
     private void Awake()
     {
         // 이미 게임 매니저가 있으면 나는 사라진다. (하나만 존재하도록)
@@ -35,10 +38,19 @@ public class GameManager : MonoBehaviour
         StartCoroutine(StartSequence_Coroutine());
     }
 
-    // 잠깐 준비 시간을 가진 뒤 게임을 시작한다.
+    // "준비" -> "시작!"을 보여준 뒤 게임을 시작한다.
     private IEnumerator StartSequence_Coroutine()
     {
-        yield return new WaitForSeconds(2f);
+        _stateText.gameObject.SetActive(true);
+
+        _stateText.text = "준비";
+        yield return new WaitForSeconds(1.5f);
+
+        _stateText.text = "시작!";
+        yield return new WaitForSeconds(0.5f);
+
+        _stateText.gameObject.SetActive(false);
+
         _state = GameState.Playing;
     }
 }
