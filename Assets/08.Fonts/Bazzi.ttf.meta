@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: db3a6d85075a86a459be4dcae40ab85d
+guid: 71905531d3a709e49bc12c35c18341d0
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -9,7 +9,7 @@ TrueTypeFontImporter:
   characterPadding: 1
   includeFontData: 1
   fontNames:
-  - Maplestory
+  - Bazzi
   fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0
