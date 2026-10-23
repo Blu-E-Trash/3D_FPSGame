@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 // 플레이어의 체력을 관리한다. 대미지를 받을 수 있다(IDamageable).
@@ -12,6 +13,9 @@ public class PlayerHealth : MonoBehaviour, IDamageable
     public float Ratio => _currentHealth / _maxHealth; // 0 ~ 1, 체력바에 쓴다.
     public bool IsDead => _currentHealth <= 0f;
 
+    // 대미지를 받았을 때 호출된다. (화면 피격 효과 등에 쓴다)
+    public event Action<DamageInfo> Damaged;
+
     private void Awake()
     {
         _currentHealth = _maxHealth;
@@ -25,6 +29,7 @@ public class PlayerHealth : MonoBehaviour, IDamageable
 
         _currentHealth = Mathf.Max(_currentHealth - damageInfo.Value, 0f);
         GameLogger.Log($"플레이어가 {damageInfo.Value} 대미지를 받았다. 남은 체력: {_currentHealth} / {_maxHealth}");
+        Damaged?.Invoke(damageInfo);
 
         if (IsDead)
         {
