@@ -75,7 +75,8 @@ public class PlayerGunFire : MonoBehaviour
         RaycastHit hitInfo = new RaycastHit();
 
         // 5. 레이캐스트를 발사하고, 부딛힌 대상이 있으면 이팩트 출력하기
-        bool isHit = Physics.Raycast(ray, out hitInfo, _range);
+        // (바닥을 보고 쏘면 레이가 내 몸을 먼저 지나가서 내가 맞는다 → 내 몸은 빼고 가장 가까운 것을 찾는다)
+        bool isHit = RaycastIgnoringSelf(ray, out hitInfo);
 
         // 총알 궤적: 맞았으면 맞은 곳까지, 안 맞았으면 사거리 끝까지 선을 그린다.
         if (_bulletTrail != null)
@@ -100,6 +101,31 @@ public class PlayerGunFire : MonoBehaviour
 
             hitInfo.collider.GetComponentInParent<IDamageable>()?.TakeDamage(damageInfo);
         }
+    }
+
+    // 레이에 맞은 것을 전부 받아서, 내 몸(플레이어와 자식 오브젝트)이 아닌 것 중 가장 가까운 것을 고른다.
+    private bool RaycastIgnoringSelf(Ray ray, out RaycastHit closestHit)
+    {
+        closestHit = new RaycastHit();
+        bool found = false;
+        float closestDistance = float.MaxValue;
+
+        RaycastHit[] hits = Physics.RaycastAll(ray, _range);
+        foreach (RaycastHit hit in hits)
+        {
+            if (hit.collider.transform.IsChildOf(transform))
+            {
+                continue;
+            }
+            if (hit.distance < closestDistance)
+            {
+                closestDistance = hit.distance;
+                closestHit = hit;
+                found = true;
+            }
+        }
+
+        return found;
     }
 
     // 재장전 시간만큼 기다린 뒤 탄창을 가득 채운다.
