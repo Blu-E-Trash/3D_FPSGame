@@ -8,6 +8,8 @@ public class PlayerGunFire : MonoBehaviour
 {
     [SerializeField]
     private GameObject _hitEffectPrefab;
+    [SerializeField]
+    private BulletTrail _bulletTrail; // 총 쏠 때 그리는 총알 궤적 (라인 렌더러)
 
     private float _range = 100f; // 총알이 날아가는 최대 거리
     private float _damage = 10f; // 총알이 적에게 입히는 피해량
@@ -74,6 +76,13 @@ public class PlayerGunFire : MonoBehaviour
 
         // 5. 레이캐스트를 발사하고, 부딛힌 대상이 있으면 이팩트 출력하기
         bool isHit = Physics.Raycast(ray, out hitInfo, _range);
+
+        // 총알 궤적: 맞았으면 맞은 곳까지, 안 맞았으면 사거리 끝까지 선을 그린다.
+        if (_bulletTrail != null)
+        {
+            Vector3 endPoint = isHit ? hitInfo.point : ray.origin + ray.direction * _range;
+            _bulletTrail.Show(endPoint);
+        }
         if (isHit)
         {
             Debug.Log($"총알이 {hitInfo.collider.name}에 맞았다.");
