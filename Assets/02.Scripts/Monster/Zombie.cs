@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -63,12 +64,46 @@ public class Zombie : MonoBehaviour, IDamageable
 
     private float _maxHealth; // 처음 체력 (체력바 비율 계산용)
 
-    public float HealthRatio => _health / _maxHealth;      // 0 ~ 1, 체력바에 쓴다.
+    public float HealthRatio => Mathf.Max(_health, 0f) / _maxHealth; // 0 ~ 1, 체력바에 쓴다.
     public bool IsDead => _state == ZombieState.Death;
+
+    // 체력이 바뀌었을 때 호출된다. (체력 비율 0 ~ 1을 넘겨준다) → 체력바가 구독한다.
+    public event Action<float> HealthChanged;
+
+    // 이 좀비가 죽었을 때 호출된다.
+    public event Action Died;
+
+    // 살아 있는 좀비 수 (모든 좀비가 함께 쓰는 값이라 static)
+    public static int AliveCount { get; private set; }
+
+    // 살아 있는 좀비 수가 바뀌었을 때 호출된다. → 남은 좀비 수 UI가 구독한다.
+    public static event Action<int> AliveCountChanged;
+
+    // static 값은 씬을 다시 시작해도 남아 있을 수 있어서, 게임을 시작할 때 초기화한다.
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        AliveCount = 0;
+        AliveCountChanged = null;
+    }
 
     private void Awake()
     {
         _maxHealth = _health;
+
+        // 좀비가 생겨나면 살아 있는 좀비 수를 늘린다.
+        AliveCount++;
+        AliveCountChanged?.Invoke(AliveCount);
+    }
+
+    private void OnDestroy()
+    {
+        // 죽지 않고 사라지는 경우(씬 종료 등)에도 수를 맞춰 준다.
+        if (IsDead == false)
+        {
+            AliveCount--;
+            AliveCountChanged?.Invoke(AliveCount);
+        }
     }
 
     private void Start()
@@ -120,6 +155,9 @@ public class Zombie : MonoBehaviour, IDamageable
 
         _health -= damageInfo.Value;
 
+        // 체력이 바뀌었다고 알린다. (체력바가 직접 확인하지 않고, 알림을 받아서 갱신한다)
+        HealthChanged?.Invoke(HealthRatio);
+
         StopAllCoroutines();
         _isLookingAround = false; // 두리번거리던 중에 맞았을 수도 있으니 정리한다.
 
@@ -146,6 +184,12 @@ public class Zombie : MonoBehaviour, IDamageable
         {
             Debug.Log($"{_state} -> Death");
             _state = ZombieState.Death;
+
+            // 죽었다고 알리고, 살아 있는 좀비 수를 줄인다.
+            Died?.Invoke();
+            AliveCount--;
+            AliveCountChanged?.Invoke(AliveCount);
+
             StartCoroutine(Death_Coroutine());
         }
 
