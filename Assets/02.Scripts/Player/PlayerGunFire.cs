@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 // 마우스 좌클릭을 하면 바라보는 방향으로 총알을 발사하고 싶다.
 // 탄창에 총알이 있을 때만 발사하고, R키를 누르면 재장전한다.
@@ -47,8 +48,11 @@ public class PlayerGunFire : MonoBehaviour
             StartCoroutine(Reload());
         }
 
-        // 2. 좌클릭을 누르고 있고 && 쿨타임이 끝났고 && 재장전 중이 아니고 && 총알이 있으면 발사하기
-        if (Input.GetButton("Fire1") && _fireTimer <= 0f && _isReloading == false && _currentAmmo > 0)
+        // 2. 마우스가 UI(미니맵 버튼 등) 위에 있으면 총을 쏘지 않는다.
+        bool isPointerOverUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+
+        // 3. 좌클릭을 누르고 있고 && UI 위가 아니고 && 쿨타임이 끝났고 && 재장전 중이 아니고 && 총알이 있으면 발사하기
+        if (Input.GetButton("Fire1") && isPointerOverUI == false && _fireTimer <= 0f && _isReloading == false && _currentAmmo > 0)
         {
             Fire();
             _fireTimer = _fireCooldown;

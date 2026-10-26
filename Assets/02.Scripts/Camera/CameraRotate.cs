@@ -27,6 +27,9 @@ public class CameraRotate : MonoBehaviour
         // 게임 중이 아니면(준비, 게임오버) 아무것도 하지 않는다.
         if (GameManager.Instance.State != GameState.Playing) return;
 
+        // 커서가 풀려 있으면(Alt를 누르고 UI를 조작하는 중) 회전하지 않는다.
+        if (Cursor.lockState != CursorLockMode.Locked) return;
+
         // 1. 마우스 입력을 받아온다.
         float mouseY = Input.GetAxis("Mouse Y");
 

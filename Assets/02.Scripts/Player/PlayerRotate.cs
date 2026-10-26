@@ -19,6 +19,9 @@ public class PlayerRotate : MonoBehaviour
         // 게임 중이 아니면(준비, 게임오버) 아무것도 하지 않는다.
         if (GameManager.Instance.State != GameState.Playing) return;
 
+        // 커서가 풀려 있으면(Alt를 누르고 UI를 조작하는 중) 회전하지 않는다.
+        if (Cursor.lockState != CursorLockMode.Locked) return;
+
         // 1. 마우스 입력을 받아온다.
         // 마우스 입력은 이미 "이번 프레임에 움직인 양"이라 Time.deltaTime을 곱하지 않는다.
         float mouseX = Input.GetAxis("Mouse X");
