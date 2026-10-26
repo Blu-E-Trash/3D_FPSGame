@@ -9,6 +9,7 @@ using UnityEngine.Serialization;
 public class Drum : MonoBehaviour, IDamageable
 {
     [SerializeField] private ParticleSystem _explosionEffectPrefab;
+    [SerializeField] private float _effectBaseRadius = 1f;   // 이펙트를 스케일 1로 터뜨렸을 때 보이는 반경 (폭발 반경에 맞춰 키울 때 기준)
 
     [Header("스탯")]
     [SerializeField] private float _health = 30f;
@@ -71,8 +72,8 @@ public class Drum : MonoBehaviour, IDamageable
         // 1. 폭발 이펙트를 생성한다.
         if (_explosionEffectPrefab != null)
         {
-            ParticleSystem effect = Instantiate(_explosionEffectPrefab, transform.position, Quaternion.identity);
-            effect.Play();
+            // 실제 폭발 반경만큼 이펙트를 키워서 터뜨린다.
+            ExplosionEffect.Spawn(_explosionEffectPrefab, transform.position, _explosionRadius, _effectBaseRadius);
         }
 
         // 2. 위로 튀어오르며 빙글빙글 돈다.

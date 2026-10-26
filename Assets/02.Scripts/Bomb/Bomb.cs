@@ -7,6 +7,8 @@ public class Bomb : MonoBehaviour
     [SerializeField]
     private ParticleSystem _explosionEffectPrefab;
     [SerializeField]
+    private float _effectBaseRadius = 1f; // 이펙트를 스케일 1로 터뜨렸을 때 보이는 반경 (폭발 반경에 맞춰 키울 때 기준)
+    [SerializeField]
     private float _maxLifeTime = 5f; // 아무 데도 부딪히지 않아도 이 시간이 지나면 터진다. (맵 밖으로 떨어진 경우 대비)
 
     [Header("폭발 대미지")]
@@ -69,7 +71,8 @@ public class Bomb : MonoBehaviour
         // 폭발 효과 생성 (Play On Awake로 바로 재생된다)
         if (_explosionEffectPrefab != null)
         {
-            Instantiate(_explosionEffectPrefab, transform.position, Quaternion.identity);
+            // 실제 폭발 반경만큼 이펙트를 키워서 터뜨린다.
+            ExplosionEffect.Spawn(_explosionEffectPrefab, transform.position, _explosionRange, _effectBaseRadius);
         }
 
         // 주변에 대미지를 준다.
