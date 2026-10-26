@@ -2936,7 +2936,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf5712edc91842c8b2f02b193e96db03, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BombPool
-  _bombPrefab: {fileID: 5997482504800034573, guid: 3254a7ca5c1a8184b89d550849557eae, type: 3}
+  _prefab: {fileID: 5997482504800034573, guid: 3254a7ca5c1a8184b89d550849557eae, type: 3}
   _poolSize: 10
 --- !u!1 &2097380949
 GameObject:
@@ -4981,7 +4981,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 32ccb1a0167047d1a1a2eecb312ed542, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZombieSpawner
-  _zombiePrefab: {fileID: 3923929125272476911, guid: 2668ba5c24a65624381e89e2caffaa75, type: 3}
+  _zombiePool: {fileID: 2800000002}
   _spawnPoints:
   - {fileID: 2700000101}
   - {fileID: 2700000111}
@@ -5464,6 +5464,52 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2700000161}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2800000000
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2800000001}
+  - component: {fileID: 2800000002}
+  m_Layer: 0
+  m_Name: ZombiePool
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2800000001
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2800000000}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -100, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2800000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2800000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72234271be01480cb5a07ddbdeccd3e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombiePool
+  _prefab: {fileID: 3923929125272476911, guid: 2668ba5c24a65624381e89e2caffaa75, type: 3}
+  _poolSize: 7
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -5484,3 +5530,4 @@ SceneRoots:
   - {fileID: 2500000001}
   - {fileID: 2500000011}
   - {fileID: 2700000001}
+  - {fileID: 2800000001}

@@ -6,7 +6,7 @@ using UnityEngine;
 // 스폰 포인트에 자식 오브젝트(웨이포인트)가 있으면 그 지점들을 순찰(Patrol)하고, 없으면 주변을 로밍(Roaming)한다.
 public class ZombieSpawner : MonoBehaviour
 {
-    [SerializeField] private Zombie _zombiePrefab;
+    [SerializeField] private ZombiePool _zombiePool;    // 좀비를 꺼내 올 풀
     [SerializeField] private Transform[] _spawnPoints;     // 좀비가 나타날 위치들
     [SerializeField] private float _spawnInterval = 10f;   // 몇 초마다 빈 자리를 확인할지
 
@@ -23,9 +23,9 @@ public class ZombieSpawner : MonoBehaviour
 
     private void Start()
     {
-        if (_zombiePrefab == null)
+        if (_zombiePool == null)
         {
-            GameLogger.LogError("ZombieSpawner: Zombie Prefab is not assigned.");
+            GameLogger.LogError("ZombieSpawner: Zombie Pool is not assigned.");
             return;
         }
 
@@ -47,19 +47,29 @@ public class ZombieSpawner : MonoBehaviour
         }
     }
 
-    // 담당 좀비가 없거나 죽은 스폰 포인트에만 새 좀비를 만든다.
+    // 담당 좀비가 없거나 죽은(풀로 돌아간) 스폰 포인트에만 풀에서 좀비를 꺼내 온다.
     private void SpawnToEmptyPoints()
     {
         for (int i = 0; i < _spawnPoints.Length; i++)
         {
             Zombie zombie = _spawnedZombies[i];
-            bool isEmpty = zombie == null || zombie.IsDead;
+            bool isEmpty = zombie == null || zombie.IsDead || zombie.gameObject.activeSelf == false;
             if (isEmpty == false)
                 continue;
 
             Transform spawnPoint = _spawnPoints[i];
-            Zombie newZombie = Instantiate(_zombiePrefab, spawnPoint.position, spawnPoint.rotation);
+            Zombie newZombie = _zombiePool.Get(spawnPoint.position, spawnPoint.rotation);
             newZombie.SetWaypoints(GetWaypoints(spawnPoint));
+
+            // 풀은 좀비를 돌려쓰기 때문에, 예전에 이 좀비를 맡았던 다른 스폰 포인트가 있으면 비워 준다.
+            // (안 그러면 그 스폰 포인트는 자기 좀비가 아직 살아 있다고 착각한다)
+            for (int j = 0; j < _spawnedZombies.Length; j++)
+            {
+                if (_spawnedZombies[j] == newZombie)
+                {
+                    _spawnedZombies[j] = null;
+                }
+            }
             _spawnedZombies[i] = newZombie;
         }
     }

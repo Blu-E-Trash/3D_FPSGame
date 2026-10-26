@@ -65,6 +65,12 @@ public class ZombiePatrolState : IZombieState
     {
     }
 
+    // 첫 번째 지점부터 다시 돈다. (웨이포인트가 바뀌었을 때)
+    public void ResetWaypointIndex()
+    {
+        _waypointIndex = 0;
+    }
+
     private void GoToNextWaypoint()
     {
         _waypointIndex = (_waypointIndex + 1) % _zombie.Waypoints.Length;

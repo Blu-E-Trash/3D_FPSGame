@@ -1,6 +1,6 @@
 using UnityEngine;
 
-// 죽음: 쓰러지고 잠시 뒤 사라진다.
+// 죽음: 쓰러지고 잠시 뒤 사라진다. (풀로 돌아간다)
 public class ZombieDeathState : IZombieState
 {
     private const float DisappearDelay = 0.5f;
@@ -25,7 +25,7 @@ public class ZombieDeathState : IZombieState
         _deathTimer += Time.deltaTime;
         if (_deathTimer >= DisappearDelay)
         {
-            Object.Destroy(_zombie.gameObject);
+            _zombie.Despawn();
         }
     }
 

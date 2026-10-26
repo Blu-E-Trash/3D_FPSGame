@@ -55,7 +55,9 @@ public class Zombie : MonoBehaviour, IDamageable
     private CharacterController _controller;
     private Vector3 _startPosition;
     private GameObject _player;
-    private float _maxHealth; // 처음 체력 (체력바 비율 계산용)
+    private float _maxHealth; // 처음 체력 (체력바 비율 계산용, 풀에서 다시 꺼낼 때 이 값으로 되돌린다)
+    private ZombiePool _pool; // 죽으면 돌아갈 풀 (없으면 Destroy)
+    private readonly List<GameObject> _bloodSprays = new List<GameObject>(); // 몸에 붙어 있는 피 이펙트 (풀로 돌아갈 때 정리)
 
     // 상태 머신
     private Dictionary<ZombieState, IZombieState> _states;
@@ -65,7 +67,7 @@ public class Zombie : MonoBehaviour, IDamageable
     private ZombiePatrolState _patrolState;
 
     public ZombieState State => _stateType;
-    public float HealthRatio => Mathf.Max(_health, 0f) / _maxHealth; // 0 ~ 1, 체력바에 쓴다.
+    public float HealthRatio => _maxHealth > 0f ? Mathf.Max(_health, 0f) / _maxHealth : 1f; // 0 ~ 1, 체력바에 쓴다.
     public bool IsDead => _stateType == ZombieState.Death;
 
     // 상태 클래스들이 쓰는 값
@@ -112,6 +114,9 @@ public class Zombie : MonoBehaviour, IDamageable
         _maxHealth = _health;
         _controller = GetComponent<CharacterController>();
 
+        // 플레이어를 찾아 둔다.
+        _player = GameObject.FindGameObjectWithTag("Player");
+
         // 상태 객체를 한 번씩만 만들어 두고 계속 쓴다.
         _roamingState = new ZombieRoamingState(this);
         _patrolState = new ZombiePatrolState(this);
@@ -126,15 +131,30 @@ public class Zombie : MonoBehaviour, IDamageable
             { ZombieState.Hit, new ZombieHitState(this) },
             { ZombieState.Death, new ZombieDeathState(this) },
         };
+    }
 
-        // 좀비가 생겨나면 살아 있는 좀비 수를 늘린다.
+    // 처음 생길 때, 그리고 풀에서 다시 꺼낼 때마다 호출된다. → 새 좀비처럼 초기화한다.
+    private void OnEnable()
+    {
+        _health = _maxHealth;
+        _controller.enabled = true;
+        _startPosition = transform.position; // 풀이 위치를 옮긴 뒤에 켜 주므로 여기가 스폰 위치다.
+
+        _currentState = null; // 지난 생의 상태(Death)에서 Exit를 부르지 않고 새로 시작한다.
+        _stateType = ZombieState.Idle;
+        ChangeState(ZombieState.Idle);
+
+        HealthChanged?.Invoke(HealthRatio);
+
+        // 살아 있는 좀비 수를 늘린다.
         AliveCount++;
         AliveCountChanged?.Invoke(AliveCount);
     }
 
-    private void OnDestroy()
+    // 꺼질 때(풀로 돌아갈 때, 씬 종료 등) 호출된다.
+    private void OnDisable()
     {
-        // 죽지 않고 사라지는 경우(씬 종료 등)에도 수를 맞춰 준다.
+        // 죽어서 꺼지는 거면 이미 수를 줄였다. 죽지 않고 꺼지는 경우에만 수를 맞춰 준다.
         if (IsDead == false)
         {
             AliveCount--;
@@ -142,14 +162,32 @@ public class Zombie : MonoBehaviour, IDamageable
         }
     }
 
-    private void Start()
+    public void SetPool(ZombiePool pool)
     {
-        _startPosition = transform.position;
+        _pool = pool;
+    }
 
-        // 게임을 시작하면 플레이어를 찾는다.
-        _player = GameObject.FindGameObjectWithTag("Player");
+    // 사라진다: 풀이 있으면 풀로 돌아가고, 없으면(씬에 직접 놓은 경우) 제거한다.
+    public void Despawn()
+    {
+        // 몸에 붙어 있던 피 이펙트는 정리한다. (다시 꺼낼 때 피가 남아 있지 않게)
+        foreach (GameObject bloodSpray in _bloodSprays)
+        {
+            if (bloodSpray != null)
+            {
+                Destroy(bloodSpray);
+            }
+        }
+        _bloodSprays.Clear();
 
-        ChangeState(ZombieState.Idle);
+        if (_pool != null)
+        {
+            _pool.Return(this);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
     }
 
     private void Update()
@@ -173,10 +211,11 @@ public class Zombie : MonoBehaviour, IDamageable
         _currentState.Enter();
     }
 
-    // 스포너가 순찰 지점을 정해 준다. (Start 전에 불러야 한다)
+    // 스포너가 순찰 지점을 정해 준다.
     public void SetWaypoints(Transform[] waypoints)
     {
         _waypoints = waypoints;
+        _patrolState.ResetWaypointIndex(); // 다른 스폰 포인트에서 쓰던 좀비일 수 있으니 처음 지점부터 간다.
     }
 
     // 대미지를 받는다.
@@ -218,6 +257,7 @@ public class Zombie : MonoBehaviour, IDamageable
             return;
 
         GameObject bloodSpray = Instantiate(_bloodSprayPrefab, transform);
+        _bloodSprays.Add(bloodSpray);
         bloodSpray.transform.position = damageInfo.HitPoint;
         if (damageInfo.HitNormal != Vector3.zero)
         {
