@@ -124,6 +124,7 @@ GameObject:
   - component: {fileID: 3923929125272476911}
   - component: {fileID: 4090214426149211599}
   - component: {fileID: 1688441568100380943}
+  - component: {fileID: 7310000000000000001}
   m_Layer: 0
   m_Name: Zombie
   m_TagString: Zombie
@@ -954,3 +955,22 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &7310000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2684670779994654208}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9a5dcefa3664e8cb4259d13bd64eb3f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MinimapIcon
+  _circleSprite: {fileID: 21300000, guid: d355406496ad41008530b696bc7235ee, type: 3}
+  _color: {r: 0.8, g: 0.12, b: 0.12, a: 1}
+  _outlineColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  _size: 1.6
+  _outlineWidth: 0.2
+  _height: 10
+  _layerName: Minimap
