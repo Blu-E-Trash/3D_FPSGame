@@ -29,7 +29,6 @@ public class ZombieAttackState : IZombieState
         _attackTimer += Time.deltaTime;
         if (_attackTimer >= _zombie.AttackInterval)
         {
-            // Todo. 공격 애니메이션 실행
             _attackTimer = 0f;
             _zombie.AttackPlayer();
         }

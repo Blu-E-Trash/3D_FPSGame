@@ -23,7 +23,6 @@ public class ZombieRoamingState : IZombieState
 
     public void Enter()
     {
-        // Todo. Walk 애니메이션 실행
         _target = PickTarget();
         _zombie.MoveTo(_target, _zombie.PatrolSpeed);
     }

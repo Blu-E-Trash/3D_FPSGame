@@ -18,7 +18,6 @@ public class ZombiePatrolState : IZombieState
 
     public void Enter()
     {
-        // Todo. Walk 애니메이션 실행
         _zombie.MoveTo(Target, _zombie.PatrolSpeed);
     }
 

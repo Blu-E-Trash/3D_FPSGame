@@ -12,6 +12,15 @@ using UnityEngine.AI;
 // Zombie에는 여러 상태가 같이 쓰는 값(스탯, 플레이어, 처음 자리)과 기능(이동, 벽 찾기, 공격)만 남긴다.
 
 
+// 좀비 애니메이터(Animator Controller)의 상태
+// 좀비 상태는 8개지만 애니메이션은 몇 개로 묶인다. (순찰, 로밍, 추격, 복귀는 모두 "걷기/뛰기" 애니메이션)
+public enum ZombieAnimationState
+{
+    Idle,       // 서 있기
+    Move,       // 걷기/뛰기
+    Attack,     // 공격 (공격 대기 + 공격)
+}
+
 // 좀비가 가질 수 있는 상태
 public enum ZombieState
 {
@@ -29,6 +38,13 @@ public enum ZombieState
 [RequireComponent(typeof(NavMeshAgent))]
 public class Zombie : MonoBehaviour, IDamageable
 {
+    // 애니메이터 트리거 이름 (Animator Controller의 Parameters와 똑같이 적어야 한다)
+    private const string IdleToMoveTrigger = "IdleToMove";
+    private const string MoveToIdleTrigger = "MoveToIdle";
+    private const string MoveAttackDelayTrigger = "MoveAttackDelay";
+    private const string AttackMoveTrigger = "AttackMove";
+    private const string StartAttackTrigger = "StartAttack";
+
     [Header("스탯")]
     [SerializeField] private float _detectDistance = 8;    // 플레이어를 발견하는 거리
     [SerializeField] private float _combackDistance = 15;   // 처음 자리에서 이만큼 멀어지면 돌아가는 거리
@@ -66,6 +82,10 @@ public class Zombie : MonoBehaviour, IDamageable
     private IZombieState _currentState;
     private ZombieRoamingState _roamingState; // 기즈모로 목적지를 보여주려고 따로 기억해 둔다.
     private ZombiePatrolState _patrolState;
+
+    // 애니메이션
+    private Animator _animator; // 좀비 모델(자식 오브젝트)에 붙어 있다.
+    private ZombieAnimationState _animationState = ZombieAnimationState.Idle; // 애니메이터가 지금 재생 중인 상태
 
     public ZombieState State => _stateType;
     public float HealthRatio => _maxHealth > 0f ? Mathf.Max(_health, 0f) / _maxHealth : 1f; // 0 ~ 1, 체력바에 쓴다.
@@ -113,6 +133,9 @@ public class Zombie : MonoBehaviour, IDamageable
         _maxHealth = _health;
         // 길을 찾아 걷게 해 주는 NavMeshAgent를 찾아서 참조한다.
         _agent = GetComponent<NavMeshAgent>();
+
+        // 애니메이터는 모델(자식 오브젝트)에 붙어 있으니 자식에서 찾는다.
+        _animator = GetComponentInChildren<Animator>();
         _agent.speed = _moveSpeed;
 
         // 플레이어를 찾아 둔다.
@@ -143,6 +166,7 @@ public class Zombie : MonoBehaviour, IDamageable
 
         _currentState = null; // 지난 생의 상태(Death)에서 Exit를 부르지 않고 새로 시작한다.
         _stateType = ZombieState.Idle;
+        _animationState = ZombieAnimationState.Idle; // 다시 켜지면 애니메이터도 처음 상태(Idle)로 돌아간다.
         ChangeState(ZombieState.Idle);
 
         HealthChanged?.Invoke(HealthRatio);
@@ -209,7 +233,58 @@ public class Zombie : MonoBehaviour, IDamageable
         _stateType = nextState;
         _currentState = _states[nextState];
 
+        PlayAnimation(nextState);
+
         _currentState.Enter();
+    }
+
+    // 좀비 상태에 맞는 애니메이션으로 바꾼다. (트리거를 켜서 애니메이터의 전이를 일으킨다)
+    // 트리거는 애니메이터가 쓰지 않으면 계속 켜진 채로 남아서 나중에 엉뚱하게 전이될 수 있다.
+    // 그래서 애니메이션이 실제로 바뀌는 경우에만, 지금 애니메이션 → 다음 애니메이션에 맞는 트리거 하나만 켠다.
+    private void PlayAnimation(ZombieState state)
+    {
+        if (_animator == null)
+            return;
+
+        ZombieAnimationState nextAnimation;
+        switch (state)
+        {
+            case ZombieState.Idle:
+                nextAnimation = ZombieAnimationState.Idle;
+                break;
+            case ZombieState.Patrol:
+            case ZombieState.Roaming:
+            case ZombieState.Trace:
+            case ZombieState.Comeback:
+                nextAnimation = ZombieAnimationState.Move;
+                break;
+            case ZombieState.Attack:
+                nextAnimation = ZombieAnimationState.Attack;
+                break;
+            default:
+                return; // 피격, 죽음은 아직 애니메이션이 없어서 지금 애니메이션을 그대로 둔다.
+        }
+
+        if (nextAnimation == _animationState)
+            return;
+
+        string trigger = GetTrigger(_animationState, nextAnimation);
+        if (trigger != null)
+        {
+            _animator.SetTrigger(trigger);
+        }
+        _animationState = nextAnimation;
+    }
+
+    // 애니메이터 컨트롤러에 있는 전이(화살표)와 그 트리거
+    // Idle → Move: IdleToMove / Move → Idle: MoveToIdle / Move → Attack: MoveAttackDelay / Attack → Move: AttackMove
+    private string GetTrigger(ZombieAnimationState from, ZombieAnimationState to)
+    {
+        if (from == ZombieAnimationState.Idle && to == ZombieAnimationState.Move) return IdleToMoveTrigger;
+        if (from == ZombieAnimationState.Move && to == ZombieAnimationState.Idle) return MoveToIdleTrigger;
+        if (from == ZombieAnimationState.Move && to == ZombieAnimationState.Attack) return MoveAttackDelayTrigger;
+        if (from == ZombieAnimationState.Attack && to == ZombieAnimationState.Move) return AttackMoveTrigger;
+        return null;
     }
 
     // 스포너가 순찰 지점을 정해 준다.
@@ -317,6 +392,12 @@ public class Zombie : MonoBehaviour, IDamageable
     // 플레이어를 때린다. (플레이어가 대미지를 받을 수 있으면)
     public void AttackPlayer()
     {
+        // 공격 애니메이션 실행
+        if (_animator != null)
+        {
+            _animator.SetTrigger(StartAttackTrigger);
+        }
+
         DamageInfo damageInfo = new DamageInfo();
         damageInfo.Value = _attackDamage;
         damageInfo.HitPoint = _player.transform.position;

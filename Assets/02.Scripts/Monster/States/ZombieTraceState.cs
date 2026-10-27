@@ -12,7 +12,6 @@ public class ZombieTraceState : IZombieState
 
     public void Enter()
     {
-        // Todo. Run 애니메이션 실행
     }
 
     public void Execute()
