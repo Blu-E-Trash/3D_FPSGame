@@ -19,6 +19,7 @@ public enum ZombieAnimationState
     Idle,       // 서 있기
     Move,       // 걷기/뛰기
     Attack,     // 공격 (공격 대기 + 공격)
+    Hit,        // 피격 (어느 상태에서든 바로 넘어가고, 끝나면 알아서 Move로 간다)
     Death,      // 죽음 (어느 상태에서든 바로 넘어간다)
 }
 
@@ -45,6 +46,7 @@ public class Zombie : MonoBehaviour, IDamageable
     private const string MoveAttackDelayTrigger = "MoveAttackDelay";
     private const string AttackMoveTrigger = "AttackMove";
     private const string StartAttackTrigger = "StartAttack";
+    private const string HitTrigger = "Hit";
     private const string DeathTrigger = "Death";
 
     [Header("스탯")]
@@ -263,14 +265,18 @@ public class Zombie : MonoBehaviour, IDamageable
             case ZombieState.Attack:
                 nextAnimation = ZombieAnimationState.Attack;
                 break;
+            case ZombieState.Hit:
+                nextAnimation = ZombieAnimationState.Hit;
+                break;
             case ZombieState.Death:
                 nextAnimation = ZombieAnimationState.Death;
                 break;
             default:
-                return; // 피격은 아직 애니메이션이 없어서 지금 애니메이션을 그대로 둔다.
+                return;
         }
 
-        if (nextAnimation == _animationState)
+        // 같은 애니메이션이면 트리거를 켜지 않는다. 단, 피격은 연달아 맞을 때마다 처음부터 다시 움찔해야 한다.
+        if (nextAnimation == _animationState && nextAnimation != ZombieAnimationState.Hit)
             return;
 
         string trigger = GetTrigger(_animationState, nextAnimation);
@@ -283,9 +289,11 @@ public class Zombie : MonoBehaviour, IDamageable
 
     // 애니메이터 컨트롤러에 있는 전이(화살표)와 그 트리거
     // Idle → Move: IdleToMove / Move → Idle: MoveToIdle / Move → Attack: MoveAttackDelay / Attack → Move: AttackMove
-    // 죽음은 Any State에서 넘어가니까 어디서든 Death 트리거 하나면 된다.
+    // 피격, 죽음은 Any State에서 넘어가니까 어디서든 트리거 하나면 된다.
+    // 피격 애니메이션이 끝나면 애니메이터가 알아서 Move로 가니까, Hit → Move는 트리거가 필요 없다.
     private string GetTrigger(ZombieAnimationState from, ZombieAnimationState to)
     {
+        if (to == ZombieAnimationState.Hit) return HitTrigger;
         if (to == ZombieAnimationState.Death) return DeathTrigger;
         if (from == ZombieAnimationState.Idle && to == ZombieAnimationState.Move) return IdleToMoveTrigger;
         if (from == ZombieAnimationState.Move && to == ZombieAnimationState.Idle) return MoveToIdleTrigger;
