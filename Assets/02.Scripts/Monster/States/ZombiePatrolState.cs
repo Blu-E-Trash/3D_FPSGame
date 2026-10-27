@@ -5,7 +5,6 @@ using UnityEngine;
 // 길은 NavMeshAgent가 찾으니까, 지점 사이에 벽이 있어도 돌아서 간다.
 public class ZombiePatrolState : IZombieState
 {
-    private const float ArriveDistance = 0.5f; // 이만큼 가까워지면 도착한 것으로 본다.
 
     private readonly Zombie _zombie;
     private int _waypointIndex = 0; // 지금 가고 있는 웨이포인트 번호 (쉬었다 와도 이어서 간다)
@@ -33,7 +32,7 @@ public class ZombiePatrolState : IZombieState
         }
 
         // 도착하면 다음 지점을 정해 두고 잠깐 쉰다.
-        if (_zombie.HasArrived(ArriveDistance))
+        if (_zombie.HasArrived())
         {
             GoToNextWaypoint();
             _zombie.ChangeState(ZombieState.Idle);

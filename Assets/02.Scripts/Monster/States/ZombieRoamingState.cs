@@ -7,7 +7,6 @@ using UnityEngine.AI;
 // 목적지에 도착하면 확률에 따라 두리번거린 뒤 잠깐 쉰다.
 public class ZombieRoamingState : IZombieState
 {
-    private const float ArriveDistance = 0.5f;
     private const float SampleDistance = 2f; // 뽑은 점 근처 이 거리 안에서 NavMesh 위의 점을 찾는다.
 
     private readonly Zombie _zombie;
@@ -45,7 +44,7 @@ public class ZombieRoamingState : IZombieState
         }
 
         // 목적지에 도착하면 두리번거리거나 바로 쉰다.
-        if (_zombie.HasArrived(ArriveDistance))
+        if (_zombie.HasArrived())
         {
             if (Random.value < _zombie.LookAroundChance)
             {

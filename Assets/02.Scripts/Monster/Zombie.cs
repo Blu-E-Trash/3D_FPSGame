@@ -293,13 +293,25 @@ public class Zombie : MonoBehaviour, IDamageable
     }
 
     // 지금 목적지에 도착했는지 (길이 막혀서 갈 수 있는 데까지만 간 경우도 도착으로 본다)
-    public bool HasArrived(float arriveDistance)
+    // 에이전트는 목적지 앞 Stopping Distance에서 멈추니까 그 거리 안이면 도착으로 본다.
+    public bool HasArrived()
     {
         if (_agent.isOnNavMesh == false)
             return true;
 
         // pathPending: 아직 길을 계산하는 중
-        return _agent.pathPending == false && _agent.remainingDistance <= arriveDistance;
+        return _agent.pathPending == false && _agent.remainingDistance <= _agent.stoppingDistance + 0.1f;
+    }
+
+    // 그 자리에 멈춘다.
+    // ResetPath로 목적지만 지우면 남아 있는 속도 때문에 미끄러지듯 조금 더 가니까, 속도도 0으로 만든다.
+    public void StopAgent()
+    {
+        if (_agent.isOnNavMesh == false)
+            return;
+
+        _agent.ResetPath();             // 에이전트의 목적지 삭제
+        _agent.velocity = Vector3.zero; // 미끄럼 방지를 위해 속도 제로!
     }
 
     // 플레이어를 때린다. (플레이어가 대미지를 받을 수 있으면)

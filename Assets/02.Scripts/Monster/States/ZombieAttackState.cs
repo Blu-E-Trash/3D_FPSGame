@@ -14,6 +14,7 @@ public class ZombieAttackState : IZombieState
     public void Enter()
     {
         _attackTimer = 0f;
+        _zombie.StopAgent(); // 쫓아오던 속도로 미끄러지지 않게 멈춰서 때린다.
     }
 
     public void Execute()

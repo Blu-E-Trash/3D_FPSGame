@@ -17,6 +17,7 @@ public class ZombieDeathState : IZombieState
     {
         // Todo. Death 애니메이션 실행
         _deathTimer = 0f;
+        _zombie.StopAgent(); // 죽은 자리에 멈춘다.
     }
 
     public void Execute()

@@ -17,6 +17,7 @@ public class ZombieHitState : IZombieState
     {
         // Todo. Hit 애니메이션 실행
         _hitTimer = 0f; // 연달아 맞으면 처음부터 다시 멈칫한다.
+        _zombie.StopAgent(); // 맞자마자 멈칫! (멈칫한 뒤에 멈추면 맞고도 조금 더 걸어온다)
     }
 
     public void Execute()

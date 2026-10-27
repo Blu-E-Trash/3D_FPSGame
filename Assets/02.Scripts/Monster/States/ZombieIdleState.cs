@@ -16,6 +16,7 @@ public class ZombieIdleState : IZombieState
     {
         // Todo. Idle 애니메이션 실행
         _idleTimer = 0f;
+        _zombie.StopAgent(); // 쉬는 동안은 제자리에 멈춘다.
     }
 
     public void Execute()
