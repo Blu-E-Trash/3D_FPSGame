@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
@@ -68,6 +69,11 @@ public class Zombie : MonoBehaviour, IDamageable
     [SerializeField] private float _patrolSpeed = 2f;       // 순찰/로밍할 때 걷는 속도 (추격보다 느리게)
     [SerializeField] private float _idleDuration = 2f;      // 목적지에 도착해서 쉬는 시간
 
+    [Header("점프 (NavMesh Link)")]
+    [SerializeField] private float _jumpExtraHeight = 1f;   // 높은 쪽(출발/도착) 위로 이만큼 더 뛰어오른다. (포물선 꼭짓점)
+    [SerializeField] private float _jumpSpeed = 6f;         // 점프할 때 앞으로 나아가는 속도 (먼 거리일수록 오래 난다)
+    [SerializeField] private float _minJumpDuration = 0.4f; // 아무리 짧아도 이 시간만큼은 공중에 있는다.
+
     [Header("두리번거리기")]
     [SerializeField, Range(0f, 1f)] private float _lookAroundChance = 0.5f; // 로밍 목적지에 도착했을 때 두리번거릴 확률
     [SerializeField] private float _lookAroundAngle = 70f;          // 두리번거릴 때 좌우로 고개를 돌리는 각도
@@ -86,6 +92,10 @@ public class Zombie : MonoBehaviour, IDamageable
     private IZombieState _currentState;
     private ZombieRoamingState _roamingState; // 기즈모로 목적지를 보여주려고 따로 기억해 둔다.
     private ZombiePatrolState _patrolState;
+
+    // 점프
+    private bool _isJumping = false;     // NavMesh Link를 따라 점프하는 중인지
+    private bool _stopAfterJump = false; // 점프 중에 멈추라는 요청이 왔는지 (착지한 뒤에 멈춘다)
 
     // 애니메이션
     private Animator _animator; // 좀비 모델(자식 오브젝트)에 붙어 있다.
@@ -167,6 +177,8 @@ public class Zombie : MonoBehaviour, IDamageable
         _health = _maxHealth;
         _startPosition = transform.position; // 풀이 위치를 옮긴 뒤에 켜 주므로 여기가 스폰 위치다.
         _agent.Warp(_startPosition);         // 에이전트도 스폰 위치에서 시작하게 순간이동시킨다.
+        _isJumping = false;                  // 점프하다가 풀로 돌아갔을 수도 있으니 초기화한다.
+        _stopAfterJump = false;
 
         _currentState = null; // 지난 생의 상태(Death)에서 Exit를 부르지 않고 새로 시작한다.
         _stateType = ZombieState.Idle;
@@ -224,8 +236,74 @@ public class Zombie : MonoBehaviour, IDamageable
         // 게임 중이 아니면(준비, 게임오버) 아무것도 하지 않는다.
         if (GameManager.Instance.State != GameState.Playing) return;
 
+        // 점프하는 동안은 코루틴이 몸을 옮기니까 상태 행동을 잠깐 멈춘다.
+        if (_isJumping)
+            return;
+
+        // NavMesh Link(점프 길)에 올라섰으면 포물선을 그리며 건너편으로 점프한다.
+        // (프리팹의 NavMeshAgent에서 Auto Traverse Off Mesh Link를 꺼 둬서, 에이전트가 직접 건너지 않고 기다린다)
+        if (_agent.isOnOffMeshLink)
+        {
+            StartCoroutine(Jump_Coroutine());
+            return;
+        }
+
         // 지금 상태에게 할 일을 맡긴다.
         _currentState?.Execute();
+    }
+
+    // 점프: 링크의 시작점 → 끝점까지 포물선을 그리며 날아간다.
+    private IEnumerator Jump_Coroutine()
+    {
+        _isJumping = true;
+
+        OffMeshLinkData link = _agent.currentOffMeshLinkData;
+        Vector3 start = transform.position;
+        Vector3 end = link.endPos + Vector3.up * _agent.baseOffset; // 링크 끝점은 바닥 위치라서 몸 높이만큼 올려 준다.
+
+        // 1. 포물선 높이: 출발과 도착 중 높은 쪽보다 _jumpExtraHeight만큼 더 높이 뛴다.
+        //    (직선으로 이은 선의 가운데 높이에서 얼마나 더 올라가야 하는지를 구한다)
+        float apexY = Mathf.Max(start.y, end.y) + _jumpExtraHeight;
+        float arcHeight = apexY - (start.y + end.y) * 0.5f;
+
+        // 2. 점프 시간: 먼 거리일수록 오래 난다.
+        Vector3 flat = end - start;
+        flat.y = 0f;
+        float duration = Mathf.Max(_minJumpDuration, flat.magnitude / _jumpSpeed);
+
+        // 3. 날아갈 방향을 바라본다.
+        if (flat.sqrMagnitude > 0.0001f)
+        {
+            transform.rotation = Quaternion.LookRotation(flat);
+        }
+
+        // 4. 시간에 따라 포물선 위의 위치로 옮긴다.
+        //    직선 위치(Lerp) + 위로 솟는 양(4 * 높이 * t * (1 - t)) → t = 0, 1 에서 0, t = 0.5 에서 가장 높다.
+        float timer = 0f;
+        while (timer < duration)
+        {
+            timer += Time.deltaTime;
+            float t = Mathf.Clamp01(timer / duration);
+            Vector3 position = Vector3.Lerp(start, end, t);
+            position.y += 4f * arcHeight * t * (1f - t);
+            transform.position = position;
+            yield return null;
+        }
+
+        // 5. 착지: 끝점에 딱 맞추고 링크를 다 건넜다고 에이전트에게 알려 준다.
+        transform.position = end;
+        if (_agent.isOnOffMeshLink)
+        {
+            _agent.CompleteOffMeshLink();
+        }
+        _isJumping = false;
+
+        // 점프 중에 멈추라는 요청(피격, 공격 등)이 있었으면 이제 멈춘다.
+        if (_stopAfterJump)
+        {
+            _stopAfterJump = false;
+            StopAgent();
+        }
     }
 
     // 상태를 바꾼다: 지금 상태에서 나가고(Exit) → 새 상태로 들어간다(Enter).
@@ -397,6 +475,13 @@ public class Zombie : MonoBehaviour, IDamageable
     // ResetPath로 목적지만 지우면 남아 있는 속도 때문에 미끄러지듯 조금 더 가니까, 속도도 0으로 만든다.
     public void StopAgent()
     {
+        // 점프 중에 목적지를 지우면 링크 위에서 꼬이니까, 착지한 뒤에 멈춘다.
+        if (_isJumping)
+        {
+            _stopAfterJump = true;
+            return;
+        }
+
         if (_agent.isOnNavMesh == false)
             return;
 
