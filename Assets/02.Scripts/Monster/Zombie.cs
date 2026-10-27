@@ -19,6 +19,7 @@ public enum ZombieAnimationState
     Idle,       // 서 있기
     Move,       // 걷기/뛰기
     Attack,     // 공격 (공격 대기 + 공격)
+    Death,      // 죽음 (어느 상태에서든 바로 넘어간다)
 }
 
 // 좀비가 가질 수 있는 상태
@@ -44,6 +45,7 @@ public class Zombie : MonoBehaviour, IDamageable
     private const string MoveAttackDelayTrigger = "MoveAttackDelay";
     private const string AttackMoveTrigger = "AttackMove";
     private const string StartAttackTrigger = "StartAttack";
+    private const string DeathTrigger = "Death";
 
     [Header("스탯")]
     [SerializeField] private float _detectDistance = 8;    // 플레이어를 발견하는 거리
@@ -261,8 +263,11 @@ public class Zombie : MonoBehaviour, IDamageable
             case ZombieState.Attack:
                 nextAnimation = ZombieAnimationState.Attack;
                 break;
+            case ZombieState.Death:
+                nextAnimation = ZombieAnimationState.Death;
+                break;
             default:
-                return; // 피격, 죽음은 아직 애니메이션이 없어서 지금 애니메이션을 그대로 둔다.
+                return; // 피격은 아직 애니메이션이 없어서 지금 애니메이션을 그대로 둔다.
         }
 
         if (nextAnimation == _animationState)
@@ -278,8 +283,10 @@ public class Zombie : MonoBehaviour, IDamageable
 
     // 애니메이터 컨트롤러에 있는 전이(화살표)와 그 트리거
     // Idle → Move: IdleToMove / Move → Idle: MoveToIdle / Move → Attack: MoveAttackDelay / Attack → Move: AttackMove
+    // 죽음은 Any State에서 넘어가니까 어디서든 Death 트리거 하나면 된다.
     private string GetTrigger(ZombieAnimationState from, ZombieAnimationState to)
     {
+        if (to == ZombieAnimationState.Death) return DeathTrigger;
         if (from == ZombieAnimationState.Idle && to == ZombieAnimationState.Move) return IdleToMoveTrigger;
         if (from == ZombieAnimationState.Move && to == ZombieAnimationState.Idle) return MoveToIdleTrigger;
         if (from == ZombieAnimationState.Move && to == ZombieAnimationState.Attack) return MoveAttackDelayTrigger;
@@ -390,13 +397,26 @@ public class Zombie : MonoBehaviour, IDamageable
     }
 
     // 플레이어를 때린다. (플레이어가 대미지를 받을 수 있으면)
-    public void AttackPlayer()
+    // 공격을 시작한다: 공격 애니메이션만 실행한다.
+    // 실제 대미지는 애니메이션에서 팔을 휘두르는 순간(애니메이션 이벤트 → ZombieHitEvent)에 AttackAction()으로 준다.
+    public void StartAttack()
     {
-        // 공격 애니메이션 실행
-        if (_animator != null)
+        if (_animator == null)
         {
-            _animator.SetTrigger(StartAttackTrigger);
+            // 애니메이터가 없으면 이벤트도 안 오니까 바로 때린다.
+            AttackAction();
+            return;
         }
+
+        _animator.SetTrigger(StartAttackTrigger);
+    }
+
+    // 플레이어에게 대미지를 준다. (공격 애니메이션 이벤트에서 호출된다)
+    public void AttackAction()
+    {
+        // 휘두르는 도중에 죽었으면 때리지 않는다.
+        if (IsDead)
+            return;
 
         DamageInfo damageInfo = new DamageInfo();
         damageInfo.Value = _attackDamage;

@@ -30,7 +30,7 @@ public class ZombieAttackState : IZombieState
         if (_attackTimer >= _zombie.AttackInterval)
         {
             _attackTimer = 0f;
-            _zombie.AttackPlayer();
+            _zombie.StartAttack();
         }
     }
 
