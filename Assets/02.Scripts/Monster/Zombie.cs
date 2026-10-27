@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 // FSM(유한 상태 머신) : 유한개의 상태가 있고, 상태마다 행동을 다르게 함으로써 AI를 구현하는 유명한 방법
 // - "상태": 객체가 가질 수 있는 어떤 조건이나 상황
@@ -24,6 +25,8 @@ public enum ZombieState
     Death,      // 죽음: 쓰러지고 잠시 뒤 사라진다.
 }
 
+// NavMeshAgent: 구워 둔 NavMesh(걸을 수 있는 바닥 지도) 위에서 목적지까지 길을 찾아 알아서 걸어가게 해 주는 컴포넌트
+[RequireComponent(typeof(NavMeshAgent))]
 public class Zombie : MonoBehaviour, IDamageable
 {
     [Header("스탯")]
@@ -45,14 +48,12 @@ public class Zombie : MonoBehaviour, IDamageable
     [SerializeField] private float _patrolSpeed = 2f;       // 순찰/로밍할 때 걷는 속도 (추격보다 느리게)
     [SerializeField] private float _idleDuration = 2f;      // 목적지에 도착해서 쉬는 시간
 
-    [Header("벽 감지")]
-    [SerializeField] private LayerMask _obstacleLayer = ~0;        // 벽으로 볼 레이어 (기본: 전부)
-    [SerializeField] private float _wallCheckDistance = 1f;         // 앞으로 이만큼 안에 벽이 있으면 멈춘다.
-    [SerializeField, Range(0f, 1f)] private float _lookAroundChance = 0.5f; // 벽을 만났을 때 두리번거릴 확률 (나머지는 바로 방향 전환)
+    [Header("두리번거리기")]
+    [SerializeField, Range(0f, 1f)] private float _lookAroundChance = 0.5f; // 로밍 목적지에 도착했을 때 두리번거릴 확률
     [SerializeField] private float _lookAroundAngle = 70f;          // 두리번거릴 때 좌우로 고개를 돌리는 각도
     [SerializeField] private float _turnSpeed = 180f;               // 몸을 돌리는 속도 (초당 각도)
 
-    private CharacterController _controller;
+    private NavMeshAgent _agent;
     private Vector3 _startPosition;
     private GameObject _player;
     private float _maxHealth; // 처음 체력 (체력바 비율 계산용, 풀에서 다시 꺼낼 때 이 값으로 되돌린다)
@@ -71,7 +72,6 @@ public class Zombie : MonoBehaviour, IDamageable
     public bool IsDead => _stateType == ZombieState.Death;
 
     // 상태 클래스들이 쓰는 값
-    public CharacterController Controller => _controller;
     public GameObject Player => _player;
     public Vector3 StartPosition => _startPosition;
     public float MoveSpeed => _moveSpeed;
@@ -84,7 +84,6 @@ public class Zombie : MonoBehaviour, IDamageable
     public float MinRoamingDistance => _minPatrolDistance;
     public float PatrolSpeed => _patrolSpeed;
     public float IdleDuration => _idleDuration;
-    public float WallCheckDistance => _wallCheckDistance;
     public float LookAroundChance => _lookAroundChance;
     public float LookAroundAngle => _lookAroundAngle;
     public float TurnSpeed => _turnSpeed;
@@ -112,7 +111,9 @@ public class Zombie : MonoBehaviour, IDamageable
     private void Awake()
     {
         _maxHealth = _health;
-        _controller = GetComponent<CharacterController>();
+        // 길을 찾아 걷게 해 주는 NavMeshAgent를 찾아서 참조한다.
+        _agent = GetComponent<NavMeshAgent>();
+        _agent.speed = _moveSpeed;
 
         // 플레이어를 찾아 둔다.
         _player = GameObject.FindGameObjectWithTag("Player");
@@ -137,8 +138,8 @@ public class Zombie : MonoBehaviour, IDamageable
     private void OnEnable()
     {
         _health = _maxHealth;
-        _controller.enabled = true;
         _startPosition = transform.position; // 풀이 위치를 옮긴 뒤에 켜 주므로 여기가 스폰 위치다.
+        _agent.Warp(_startPosition);         // 에이전트도 스폰 위치에서 시작하게 순간이동시킨다.
 
         _currentState = null; // 지난 생의 상태(Death)에서 Exit를 부르지 않고 새로 시작한다.
         _stateType = ZombieState.Idle;
@@ -278,17 +279,27 @@ public class Zombie : MonoBehaviour, IDamageable
         return Vector3.Distance(transform.position, _player.transform.position);
     }
 
-    // direction 방향을 바라보며 speed로 이동한다. 실제로 움직였으면 true (끼어서 못 움직이면 false)
-    public bool Move(Vector3 direction, float speed)
+    // destination까지 speed로 걸어간다. 길은 NavMeshAgent가 알아서 찾는다. (벽, 계단, 경사로를 돌아서 간다)
+    // SetDestination은 "목적지 설정"이다.
+    // - 호출할 때마다 목적지를 향해 조금씩 이동 (X)
+    // - 한 번 설정하면 에이전트가 내부에서 계속 이동 (O)
+    public void MoveTo(Vector3 destination, float speed)
     {
-        transform.forward = direction;
+        if (_agent.isOnNavMesh == false)
+            return;
 
-        Vector3 before = transform.position;
-        _controller.SimpleMove(direction * speed);
+        _agent.speed = speed;
+        _agent.SetDestination(destination);
+    }
 
-        Vector3 moved = transform.position - before;
-        moved.y = 0f;
-        return moved.magnitude >= speed * Time.deltaTime * 0.3f;
+    // 지금 목적지에 도착했는지 (길이 막혀서 갈 수 있는 데까지만 간 경우도 도착으로 본다)
+    public bool HasArrived(float arriveDistance)
+    {
+        if (_agent.isOnNavMesh == false)
+            return true;
+
+        // pathPending: 아직 길을 계산하는 중
+        return _agent.pathPending == false && _agent.remainingDistance <= arriveDistance;
     }
 
     // 플레이어를 때린다. (플레이어가 대미지를 받을 수 있으면)
@@ -303,58 +314,7 @@ public class Zombie : MonoBehaviour, IDamageable
         Debug.Log("플레이어를 때렸습니다.");
     }
 
-    // 몸 두께만큼 굵은 레이(구)를 쏴서 가장 가까운 "진짜 벽"을 찾는다.
-    // SphereCast는 처음 맞은 것 하나만 알려주는데, 그게 내 눈썹이나 코일 수도 있다!
-    // 그래서 SphereCastAll로 맞은 것을 전부 받아서 내 몸이 아닌 것 중에 가장 가까운 것을 고른다.
-    public bool FindWall(Vector3 direction, float distance, out Vector3 wallNormal)
-    {
-        wallNormal = Vector3.zero;
-
-        Vector3 origin = transform.position + _controller.center; // 몸통 가운데 높이에서 쏜다.
-        float radius = _controller.radius * 0.8f;
-
-        RaycastHit[] hits = Physics.SphereCastAll(origin, radius, direction, distance, _obstacleLayer, QueryTriggerInteraction.Ignore);
-
-        bool found = false;
-        float closestDistance = float.MaxValue;
-        foreach (RaycastHit hit in hits)
-        {
-            if (IsWall(hit) == false)
-            {
-                continue;
-            }
-            if (hit.distance < closestDistance)
-            {
-                closestDistance = hit.distance;
-                wallNormal = hit.normal;
-                found = true;
-            }
-        }
-
-        wallNormal.y = 0f;
-        return found;
-    }
-
-    // 부딪힌 것이 진짜 벽인지 (내 몸, 플레이어, 바닥/완만한 경사면은 벽이 아니다)
-    private bool IsWall(RaycastHit hit)
-    {
-        // 내 몸(눈썹, 코 같은 자식 오브젝트 포함)은 벽이 아니다.
-        if (hit.collider.transform.IsChildOf(transform))
-        {
-            return false;
-        }
-        if (hit.collider.gameObject == _player)
-        {
-            return false;
-        }
-        if (hit.normal.y > 0.7f) // 위를 향한 면 = 바닥이나 경사로
-        {
-            return false;
-        }
-        return true;
-    }
-
-    // 씬 뷰에서 좀비를 선택하면 순찰 경로, 로밍 범위, 목적지, 벽 감지 거리, 플레이어 감지 범위를 보여준다.
+    // 씬 뷰에서 좀비를 선택하면 순찰 경로, 로밍 범위, 목적지, 플레이어 감지 범위를 보여준다.
     private void OnDrawGizmosSelected()
     {
         // 게임 시작 전에는 아직 처음 자리를 저장 안 했으니 현재 위치로 보여준다.
@@ -387,10 +347,6 @@ public class Zombie : MonoBehaviour, IDamageable
             Gizmos.DrawLine(transform.position, target);
             Gizmos.DrawWireSphere(target, 0.3f);
         }
-
-        // 벽 감지 거리
-        Gizmos.color = Color.red;
-        Gizmos.DrawRay(transform.position, transform.forward * _wallCheckDistance);
 
         // 플레이어 감지 범위
         Gizmos.color = Color.yellow;

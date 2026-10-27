@@ -31,9 +31,8 @@ public class ZombieTraceState : IZombieState
             return;
         }
 
-        Vector3 direction = _zombie.Player.transform.position - _zombie.transform.position;
-        direction.y = 0f;
-        _zombie.Move(direction.normalized, _zombie.MoveSpeed);
+        // 플레이어 위치로 목적지를 계속 갱신한다. (플레이어가 움직이니까)
+        _zombie.MoveTo(_zombie.Player.transform.position, _zombie.MoveSpeed);
     }
 
     public void Exit()

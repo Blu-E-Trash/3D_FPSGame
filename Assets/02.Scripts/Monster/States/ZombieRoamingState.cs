@@ -1,17 +1,18 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.AI;
 
 // 로밍: 처음 자리 주변을 무작위로 돌아다닌다.
-// 벽을 만나면 확률에 따라 두리번거리거나, 벽 반대쪽으로 방향을 바꾼다.
+// 목적지는 NavMesh 위(걸을 수 있는 곳)에서만 고르고, 길은 NavMeshAgent가 찾는다.
+// 목적지에 도착하면 확률에 따라 두리번거린 뒤 잠깐 쉰다.
 public class ZombieRoamingState : IZombieState
 {
     private const float ArriveDistance = 0.5f;
-    private const float StuckLimit = 0.5f;
+    private const float SampleDistance = 2f; // 뽑은 점 근처 이 거리 안에서 NavMesh 위의 점을 찾는다.
 
     private readonly Zombie _zombie;
     private Vector3 _target;                // 지금 걸어가고 있는 목적지
-    private float _stuckTimer;              // 제자리에 끼어 있던 시간
-    private bool _isLookingAround;          // 벽 앞에서 두리번거리는 중인지
+    private bool _isLookingAround;          // 두리번거리는 중인지
     private Coroutine _lookAroundCoroutine; // 두리번거리기 코루틴 (상태가 바뀌면 멈추려고 기억해 둔다)
 
     public ZombieRoamingState(Zombie zombie)
@@ -24,8 +25,8 @@ public class ZombieRoamingState : IZombieState
     public void Enter()
     {
         // Todo. Walk 애니메이션 실행
-        _stuckTimer = 0f;
-        PickTarget(Vector3.zero); // 아무 방향으로나 새 목적지를 정한다.
+        _target = PickTarget();
+        _zombie.MoveTo(_target, _zombie.PatrolSpeed);
     }
 
     public void Execute()
@@ -43,37 +44,16 @@ public class ZombieRoamingState : IZombieState
             return;
         }
 
-        Vector3 direction = _target - _zombie.transform.position;
-        direction.y = 0f;
-
-        // 목적지에 도착하면 잠깐 쉰다. 쉬고 나면 또 새 목적지를 정한다.
-        if (direction.magnitude < ArriveDistance)
+        // 목적지에 도착하면 두리번거리거나 바로 쉰다.
+        if (_zombie.HasArrived(ArriveDistance))
         {
-            _zombie.ChangeState(ZombieState.Idle);
-            return;
-        }
-
-        direction.Normalize();
-
-        // 1. 앞에 벽이 있으면 멈추고 어떻게 할지 정한다.
-        if (_zombie.FindWall(direction, _zombie.WallCheckDistance, out Vector3 wallNormal))
-        {
-            OnMeetWall(wallNormal);
-            return;
-        }
-
-        // 2. 걸어간다. 레이에 안 걸리는 낮은 턱이나 모서리에 끼어 있으면 벽을 만난 것으로 친다.
-        bool isMoved = _zombie.Move(direction, _zombie.PatrolSpeed);
-        if (isMoved)
-        {
-            _stuckTimer = 0f;
-        }
-        else
-        {
-            _stuckTimer += Time.deltaTime;
-            if (_stuckTimer >= StuckLimit)
+            if (Random.value < _zombie.LookAroundChance)
             {
-                OnMeetWall(-direction); // 막힌 반대쪽(뒤쪽)을 벽의 바깥 방향으로 본다.
+                _lookAroundCoroutine = _zombie.StartCoroutine(LookAround_Coroutine());
+            }
+            else
+            {
+                _zombie.ChangeState(ZombieState.Idle);
             }
         }
     }
@@ -89,23 +69,8 @@ public class ZombieRoamingState : IZombieState
         _isLookingAround = false;
     }
 
-    // 벽을 만났을 때: 확률에 따라 두리번거리거나, 바로 다른 방향으로 간다.
-    private void OnMeetWall(Vector3 wallNormal)
-    {
-        _stuckTimer = 0f;
-
-        if (Random.value < _zombie.LookAroundChance)
-        {
-            _lookAroundCoroutine = _zombie.StartCoroutine(LookAround_Coroutine(wallNormal));
-        }
-        else
-        {
-            PickTarget(wallNormal);
-        }
-    }
-
-    // 두리번거리기: 왼쪽 보고, 오른쪽 보고, 벽 반대쪽으로 새 목적지를 정한다.
-    private IEnumerator LookAround_Coroutine(Vector3 wallNormal)
+    // 두리번거리기: 왼쪽 보고, 오른쪽 보고, 잠깐 쉰다.
+    private IEnumerator LookAround_Coroutine()
     {
         _isLookingAround = true;
 
@@ -119,10 +84,9 @@ public class ZombieRoamingState : IZombieState
         yield return RotateTo_Coroutine(baseAngle + _zombie.LookAroundAngle); // 오른쪽을 보고
         yield return new WaitForSeconds(0.4f);
 
-        // 다 둘러봤으니 벽 반대쪽으로 간다.
-        PickTarget(wallNormal);
         _isLookingAround = false;
         _lookAroundCoroutine = null;
+        _zombie.ChangeState(ZombieState.Idle);
     }
 
     // 정해진 각도(y축)까지 천천히 몸을 돌린다.
@@ -138,49 +102,33 @@ public class ZombieRoamingState : IZombieState
         transform.rotation = targetRotation;
     }
 
-    // 새 목적지를 정한다.
-    // - preferDirection이 zero면 아무 방향이나 고른다.
-    // - 아니면 그 방향 기준 좌우 80도 안에서 고른다. (벽을 만났을 때 벽 반대쪽으로 가려고)
-    private void PickTarget(Vector3 preferDirection)
+    // 처음 자리 주변(로밍 반경 안)에서 걸어갈 수 있는 목적지를 고른다.
+    private Vector3 PickTarget()
     {
-        preferDirection.y = 0f;
         Vector3 position = _zombie.transform.position;
 
         // 조건에 맞는 목적지가 나올 때까지 최대 10번 뽑아 본다.
         for (int i = 0; i < 10; i++)
         {
-            Vector3 direction;
-            if (preferDirection == Vector3.zero)
-            {
-                direction = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f) * Vector3.forward;
-            }
-            else
-            {
-                direction = Quaternion.Euler(0f, Random.Range(-80f, 80f), 0f) * preferDirection.normalized;
-            }
+            Vector2 randomCircle = Random.insideUnitCircle * _zombie.RoamingRadius;
+            Vector3 candidate = _zombie.StartPosition + new Vector3(randomCircle.x, 0f, randomCircle.y);
 
-            float distance = Random.Range(_zombie.MinRoamingDistance, _zombie.RoamingRadius);
-            Vector3 candidate = position + direction * distance;
-
-            // 조건 1. 처음 자리에서 로밍 반경 밖이면 안 된다.
-            Vector3 fromStart = candidate - _zombie.StartPosition;
-            fromStart.y = 0f;
-            if (fromStart.magnitude > _zombie.RoamingRadius)
+            // 조건 1. 너무 가까우면 찔끔 움직이니까 다시 뽑는다.
+            Vector3 offset = candidate - position;
+            offset.y = 0f;
+            if (offset.magnitude < _zombie.MinRoamingDistance)
             {
                 continue;
             }
 
-            // 조건 2. 가는 길에 벽이 있으면 안 된다.
-            if (_zombie.FindWall(direction, distance, out _))
+            // 조건 2. NavMesh 위(걸을 수 있는 곳)여야 한다. 근처의 NavMesh 위 점으로 맞춰 준다.
+            if (NavMesh.SamplePosition(candidate, out NavMeshHit hit, SampleDistance, NavMesh.AllAreas))
             {
-                continue;
+                return hit.position;
             }
-
-            _target = candidate;
-            return;
         }
 
-        // 10번 다 실패하면(구석에 몰렸으면) 처음 자리로 돌아간다.
-        _target = _zombie.StartPosition;
+        // 10번 다 실패하면 처음 자리로 돌아간다.
+        return _zombie.StartPosition;
     }
 }

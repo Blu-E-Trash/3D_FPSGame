@@ -17,7 +17,6 @@ public class ZombieDeathState : IZombieState
     {
         // Todo. Death 애니메이션 실행
         _deathTimer = 0f;
-        _zombie.Controller.enabled = false; // 더 이상 부딪히지 않게 한다.
     }
 
     public void Execute()
