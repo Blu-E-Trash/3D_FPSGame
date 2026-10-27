@@ -24,6 +24,11 @@ public class PlayerBombFire : MonoBehaviour
     private float _chargeTimer = 0f;    // 지금까지 모은 시간
     private bool _isCharging = false;   // 힘을 모으는 중인지
 
+    [Header("던진 뒤 텀")]
+    [SerializeField]
+    private float _throwCooldown = 0.5f; // 던진 뒤 다음 폭탄을 모으기 시작할 수 있을 때까지의 시간(초)
+    private float _cooldownTimer = 0f;   // 다음 폭탄까지 남은 시간
+
     public int CurrentBombCount => _currentBombCount;
     public int MaxBombCount => _maxBombCount;
     public float ChargeRatio => _chargeTimer / _maxChargeTime; // 0 ~ 1, 힘 게이지 UI에 쓴다.
@@ -40,8 +45,11 @@ public class PlayerBombFire : MonoBehaviour
         // 게임 중이 아니면(준비, 게임오버) 아무것도 하지 않는다.
         if (GameManager.Instance.State != GameState.Playing) return;
 
-        // 1. 오른쪽 버튼을 누르는 순간 && 폭탄이 남아 있으면 힘 모으기를 시작한다.
-        if (Input.GetButtonDown("Fire2") && _currentBombCount > 0)
+        // 0. 던진 뒤 텀(쿨타임)을 줄인다.
+        _cooldownTimer -= Time.deltaTime;
+
+        // 1. 오른쪽 버튼을 누르는 순간 && 텀이 끝났고 && 폭탄이 남아 있으면 힘 모으기를 시작한다.
+        if (Input.GetButtonDown("Fire2") && _cooldownTimer <= 0f && _currentBombCount > 0)
         {
             _isCharging = true;
             _chargeTimer = 0f;
@@ -61,6 +69,7 @@ public class PlayerBombFire : MonoBehaviour
 
             _isCharging = false;
             _chargeTimer = 0f;
+            _cooldownTimer = _throwCooldown; // 던졌으니 잠깐 텀을 둔다.
         }
     }
 
