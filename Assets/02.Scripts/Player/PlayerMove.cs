@@ -4,7 +4,10 @@ using UnityEngine;
 // 키보드 방향키에 따라 그 방향으로 이동하고 싶다.
 public class PlayerMove : MonoBehaviour
 {
-    private const string MoveMotionParameter = "MoveMotion"; // 애니메이터의 블렌드 트리 파라미터 (0: 서 있기, 1: 달리기)
+    private const string MoveMotionParameter = "MoveMotion"; // 애니메이터의 블렌드 트리 파라미터
+    private const float IdleMotion = 0f;   // 서 있기
+    private const float WalkMotion = 0.5f; // 걷기 (보통 이동)
+    private const float RunMotion = 1f;    // 달리기 (왼쪽 Shift 질주)
     private const float Gravity = -20f;
     private const float GroundedYVelocity = -2f; // 땅에 있을 때 바닥에 붙어 있도록 살짝 아래로 누르는 속도
     private float _yVelocity = 0f;  // 위아래 속도, 매 프레임마다 중력 가속도가 붙는다.
@@ -57,7 +60,6 @@ public class PlayerMove : MonoBehaviour
         // 2. 키보드 입력에 따라 방향을 구한다.
         Vector3 direction = new Vector3(h, 0, v);
         direction.Normalize(); // 대각선이어도 방향의 길이 1로 바꾸기 위해
-        _animator.SetFloat(MoveMotionParameter, direction.magnitude); // 움직이면 1(달리기), 멈추면 0(서 있기)
         // 캐릭터의 회전 방향을 기준으로 로컬 방향 벡터를 월드 방향 벡터로 변환한다.
         direction = transform.TransformDirection(direction);
         // 로컬 좌표계: 한 대상을 중심
@@ -126,6 +128,10 @@ public class PlayerMove : MonoBehaviour
         }
 
         float speed = isRunning ? _runSpeed : _moveSpeed;
+
+        // 7-1. 멈춰 있으면 서 있기, 움직이면 걷기, 질주하면 달리기 동작을 한다.
+        float moveMotion = isMoving == false ? IdleMotion : (isRunning ? RunMotion : WalkMotion);
+        _animator.SetFloat(MoveMotionParameter, moveMotion);
 
         // 8. 속도를 구한다.
         Vector3 velocity = direction * speed;
