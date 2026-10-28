@@ -4,6 +4,7 @@ using UnityEngine;
 // 키보드 방향키에 따라 그 방향으로 이동하고 싶다.
 public class PlayerMove : MonoBehaviour
 {
+    private const string MoveMotionParameter = "MoveMotion"; // 애니메이터의 블렌드 트리 파라미터 (0: 서 있기, 1: 달리기)
     private const float Gravity = -20f;
     private const float GroundedYVelocity = -2f; // 땅에 있을 때 바닥에 붙어 있도록 살짝 아래로 누르는 속도
     private float _yVelocity = 0f;  // 위아래 속도, 매 프레임마다 중력 가속도가 붙는다.
@@ -32,6 +33,7 @@ public class PlayerMove : MonoBehaviour
     private float _coyoteTimer = 0f;     // 코요테 타임 남은 시간
     private float _jumpBufferTimer = 0f; // 점프 버퍼 남은 시간
     private bool _wasGrounded = true;    // 지난 프레임에 땅에 있었는지 (착지 판정용)
+    private Animator _animator;          // 군인 모델의 동작을 바꿔 주는 컴포넌트
 
     // 착지한 순간 호출된다. 인자는 착지 직전의 낙하 속도(양수). 카메라 연출 등에 쓴다.
     public event Action<float> Landed;
@@ -40,6 +42,7 @@ public class PlayerMove : MonoBehaviour
     {
         _characterController = GetComponent<CharacterController>();
         _stamina = GetComponent<PlayerStamina>();
+        _animator = GetComponentInChildren<Animator>(); // 자식인 Model에 붙어 있다.
     }
 
     private void Update()
@@ -54,6 +57,7 @@ public class PlayerMove : MonoBehaviour
         // 2. 키보드 입력에 따라 방향을 구한다.
         Vector3 direction = new Vector3(h, 0, v);
         direction.Normalize(); // 대각선이어도 방향의 길이 1로 바꾸기 위해
+        _animator.SetFloat(MoveMotionParameter, direction.magnitude); // 움직이면 1(달리기), 멈추면 0(서 있기)
         // 캐릭터의 회전 방향을 기준으로 로컬 방향 벡터를 월드 방향 벡터로 변환한다.
         direction = transform.TransformDirection(direction);
         // 로컬 좌표계: 한 대상을 중심
