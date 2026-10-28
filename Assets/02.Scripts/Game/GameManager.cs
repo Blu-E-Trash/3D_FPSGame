@@ -21,6 +21,7 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] private TextMeshProUGUI _stateText; // 화면 가운데에 상태를 알려주는 글자 (준비, 시작!)
     [SerializeField] private CursorManager _cursorManager; // 게임오버 때 마우스 커서를 풀어주기 위해
+    [SerializeField] private Animator _playerAnimator;     // 게임오버 때 군인을 서 있는 동작으로 돌리기 위해
 
     private void Awake()
     {
@@ -64,6 +65,13 @@ public class GameManager : MonoBehaviour
         if (_cursorManager != null)
         {
             _cursorManager.UnlockCursor();
+        }
+
+        // 플레이어는 게임 중이 아니면 움직임 처리를 멈추니까, 달리던 중이었으면 계속 제자리에서 달리게 된다.
+        // 그래서 서 있는 동작으로 돌려 놓는다.
+        if (_playerAnimator != null)
+        {
+            _playerAnimator.SetFloat("MoveMotion", 0f);
         }
 
         _stateText.gameObject.SetActive(true);

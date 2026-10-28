@@ -6,6 +6,8 @@ using UnityEngine.EventSystems;
 // 탄창에 총알이 있을 때만 발사하고, R키를 누르면 재장전한다.
 public class PlayerGunFire : MonoBehaviour
 {
+    private const string AttackTrigger = "Attack"; // 애니메이터의 쏘는 동작 트리거
+
     [SerializeField]
     private GameObject _hitEffectPrefab;
     [SerializeField]
@@ -30,10 +32,13 @@ public class PlayerGunFire : MonoBehaviour
     public int MaxAmmo => _maxAmmo;
     public bool IsReloading => _isReloading;
 
+    private Animator _animator; // 군인 모델의 애니메이터
+
     private void Awake()
     {
         // 처음에는 탄창을 가득 채운 상태로 시작한다.
         _currentAmmo = _maxAmmo;
+        _animator = GetComponentInChildren<Animator>(); // 자식인 Model에 붙어 있다.
     }
 
     private void Update()
@@ -58,6 +63,7 @@ public class PlayerGunFire : MonoBehaviour
         {
             Fire();
             _fireTimer = _fireCooldown;
+            _animator.SetTrigger(AttackTrigger); // 군인이 쏘는 동작을 한다.
         }
     }
 
