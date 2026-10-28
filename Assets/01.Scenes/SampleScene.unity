@@ -1032,6 +1032,7 @@ GameObject:
   - component: {fileID: 941263699}
   - component: {fileID: 941263702}
   - component: {fileID: 2500000300}
+  - component: {fileID: 3600000001}
   m_Layer: 7
   m_Name: Player
   m_TagString: Player
@@ -6441,6 +6442,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 3400000002}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3600000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 941263692}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6587de3d56fd4a6688ffc37d9802727b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FirstPersonHeadHider
+  _hideHead: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

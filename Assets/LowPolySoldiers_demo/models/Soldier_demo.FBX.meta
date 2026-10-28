@@ -1,7 +1,14 @@
 fileFormatVersion: 2
 guid: fcb334eb247ae3e488abb081c847cf09
+AssetOrigin:
+  serializedVersion: 1
+  productId: 73611
+  packageName: Low Poly Soldiers Demo
+  packageVersion: 1.0
+  assetPath: Assets/LowPolySoldiers_demo/models/Soldier_demo.FBX
+  uploadId: 982312
 ModelImporter:
-  serializedVersion: 24501
+  serializedVersion: 24300
   internalIDToNameTable:
   - first:
       1: 100000
@@ -271,8 +278,6 @@ ModelImporter:
     generateMeshLods: 0
     meshLodGenerationFlags: 0
     maximumMeshLod: -1
-    importUVs: -1
-    importVertexColors: 1
     meshOptimizationFlags: -1
     indexFormat: 1
     secondaryUVAngleDistortion: 8
@@ -292,7 +297,6 @@ ModelImporter:
     legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 1
     blendShapeNormalImportMode: 1
     normalSmoothingSource: 0
-    calculateBlendshapeNormalsDeltaFromImportedNormals: 1
   referencedClips: []
   importAnimation: 0
   humanDescription:
@@ -306,11 +310,11 @@ ModelImporter:
     armStretch: 0.05
     legStretch: 0.05
     feetSpacing: 0
-    globalScale: 1
-    rootMotionBoneName: 
+    globalScale: 0.7
+    rootMotionBoneName: Base HumanPelvis
     hasTranslationDoF: 0
-    hasExtraRoot: 0
-    skeletonHasParents: 0
+    hasExtraRoot: 1
+    skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
   autoGenerateAvatarMappingIfUnspecified: 1
   animationType: 3
@@ -323,10 +327,3 @@ ModelImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 73611
-  packageName: Low Poly Soldiers Demo
-  packageVersion: 1.0
-  assetPath: Assets/LowPolySoldiers_demo/models/Soldier_demo.FBX
-  uploadId: 982312
