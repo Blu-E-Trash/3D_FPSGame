@@ -6,6 +6,7 @@ using UnityEngine;
 [RequireComponent(typeof(LineRenderer))]
 public class BulletTrail : MonoBehaviour
 {
+    [SerializeField] private Transform _muzzle;           // 선이 시작하는 총구 위치 (군인 손에 붙어 있어서 동작을 따라 움직인다. 비우면 이 오브젝트 위치)
     [SerializeField] private float _duration = 0.05f;     // 선이 보이는 시간(초)
     [SerializeField] private float _startWidth = 0.03f;   // 총구 쪽 두께
     [SerializeField] private float _endWidth = 0.01f;     // 맞은 쪽 두께
@@ -41,7 +42,8 @@ public class BulletTrail : MonoBehaviour
     // 총구에서 endPoint까지 선을 잠깐 보여 준다.
     public void Show(Vector3 endPoint)
     {
-        _lineRenderer.SetPosition(0, transform.position);
+        Vector3 startPoint = _muzzle != null ? _muzzle.position : transform.position;
+        _lineRenderer.SetPosition(0, startPoint);
         _lineRenderer.SetPosition(1, endPoint);
         _lineRenderer.enabled = true;
 
