@@ -4,6 +4,9 @@ using UnityEngine;
 // 오래 누를수록 멀리 날아가고, 폭탄은 가지고 있는 10개까지만 던질 수 있다. (자동으로 채워지지 않는다)
 public class PlayerBombFire : MonoBehaviour
 {
+    private const string IsChargingBombParameter = "IsChargingBomb"; // 힘을 모으는 동안 오른팔을 뒤로 젖힌다. (RightArm 레이어)
+    private const string ThrowTrigger = "Throw";                     // 던지는 동작 트리거 (RightArm 레이어)
+
     [SerializeField]
     private BombPool _bombPool;
     [SerializeField]
@@ -34,10 +37,13 @@ public class PlayerBombFire : MonoBehaviour
     public float ChargeRatio => _chargeTimer / _maxChargeTime; // 0 ~ 1, 힘 게이지 UI에 쓴다.
     public bool IsCharging => _isCharging;
 
+    private Animator _animator; // 군인 모델의 애니메이터
+
     private void Awake()
     {
         // 처음에는 가득 가진 상태로 시작한다.
         _currentBombCount = _maxBombCount;
+        _animator = GetComponentInChildren<Animator>(); // 자식인 Model에 붙어 있다.
     }
 
     private void Update()
@@ -53,6 +59,9 @@ public class PlayerBombFire : MonoBehaviour
         {
             _isCharging = true;
             _chargeTimer = 0f;
+            // 오른팔만 들어가는 RightArm 레이어(아바타 마스크)에서 팔을 뒤로 젖힌다.
+            // 그래서 왼손은 총을 그대로 들고, 다리는 걷기/달리기 동작을 그대로 한다.
+            _animator.SetBool(IsChargingBombParameter, true);
         }
 
         // 2. 누르고 있는 동안 힘을 모은다. (최대 시간까지만)
@@ -66,6 +75,8 @@ public class PlayerBombFire : MonoBehaviour
         {
             float throwForce = Mathf.Lerp(_minThrowForce, _maxThrowForce, ChargeRatio);
             Throw(throwForce);
+            _animator.SetBool(IsChargingBombParameter, false);
+            _animator.SetTrigger(ThrowTrigger);
 
             _isCharging = false;
             _chargeTimer = 0f;
