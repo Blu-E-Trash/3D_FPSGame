@@ -6,7 +6,8 @@ using UnityEngine.EventSystems;
 // 탄창에 총알이 있을 때만 발사하고, R키를 누르면 재장전한다.
 public class PlayerGunFire : MonoBehaviour
 {
-    private const string AttackTrigger = "Attack"; // 애니메이터의 쏘는 동작 트리거
+    private const string AttackTrigger = "Attack";         // 애니메이터의 쏘는 동작 트리거
+    private const string MoveMotionParameter = "MoveMotion"; // 애니메이터의 이동 블렌드 값 (0: 서 있기)
 
     [SerializeField]
     private GameObject _hitEffectPrefab;
@@ -63,7 +64,13 @@ public class PlayerGunFire : MonoBehaviour
         {
             Fire();
             _fireTimer = _fireCooldown;
-            _animator.SetTrigger(AttackTrigger); // 군인이 쏘는 동작을 한다.
+            // 서 있을 때(MoveMotion이 0)만 쏘는 동작을 한다.
+            // 쏘는 동작은 다리까지 들어 있는 온몸 동작이라, 움직일 때 하면 다리가 멈춰서 미끄러지듯 움직인다.
+            // (MoveMotion은 0, 0.5, 1이지만 나중에 값을 부드럽게 바꿀 수도 있으니 == 0 대신 < 0.1로 비교한다)
+            if (_animator.GetFloat(MoveMotionParameter) < 0.1f)
+            {
+                _animator.SetTrigger(AttackTrigger);
+            }
         }
     }
 
