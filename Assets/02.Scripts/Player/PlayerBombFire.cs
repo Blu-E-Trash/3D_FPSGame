@@ -2,6 +2,7 @@ using UnityEngine;
 
 // 마우스 오른쪽 버튼을 누르고 있는 동안 힘을 모으고, 떼면 폭탄을 던지고 싶다.
 // 오래 누를수록 멀리 날아가고, 폭탄은 가지고 있는 10개까지만 던질 수 있다. (자동으로 채워지지 않는다)
+[RequireComponent(typeof(PlayerWeaponMode))]
 public class PlayerBombFire : MonoBehaviour
 {
     private const string IsChargingBombParameter = "IsChargingBomb"; // 힘을 모으는 동안 오른팔을 뒤로 젖힌다. (RightArm 레이어)
@@ -38,12 +39,14 @@ public class PlayerBombFire : MonoBehaviour
     public bool IsCharging => _isCharging;
 
     private Animator _animator; // 군인 모델의 애니메이터
+    private PlayerWeaponMode _weaponMode;
 
     private void Awake()
     {
         // 처음에는 가득 가진 상태로 시작한다.
         _currentBombCount = _maxBombCount;
         _animator = GetComponentInChildren<Animator>(); // 자식인 Model에 붙어 있다.
+        _weaponMode = GetComponent<PlayerWeaponMode>();
     }
 
     private void Update()
@@ -53,6 +56,19 @@ public class PlayerBombFire : MonoBehaviour
 
         // 0. 던진 뒤 텀(쿨타임)을 줄인다.
         _cooldownTimer -= Time.deltaTime;
+
+        // 폭탄은 일반 모드에서만 던진다. 저격 모드의 오른쪽 버튼은 PlayerZoom이 쓴다.
+        if (_weaponMode.Mode != WeaponMode.Normal)
+        {
+            // 힘을 모으던 중에 모드를 바꿨으면 던지지 않고 취소한다.
+            if (_isCharging)
+            {
+                _isCharging = false;
+                _chargeTimer = 0f;
+                _animator.SetBool(IsChargingBombParameter, false);
+            }
+            return;
+        }
 
         // 1. 오른쪽 버튼을 누르는 순간 && 텀이 끝났고 && 폭탄이 남아 있으면 힘 모으기를 시작한다.
         if (Input.GetButtonDown("Fire2") && _cooldownTimer <= 0f && _currentBombCount > 0)
