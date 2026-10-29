@@ -22,4 +22,10 @@ public class PlayerMeleeEvent : MonoBehaviour
     {
         _meleeAttack.DeactivateCollider();
     }
+
+    // MeleeSwing 동작에서 칼이 몸 바로 앞을 지날 때 불린다. (20.9 부채꼴 방법)
+    public void FanAttack()
+    {
+        _meleeAttack.FanAttack();
+    }
 }
