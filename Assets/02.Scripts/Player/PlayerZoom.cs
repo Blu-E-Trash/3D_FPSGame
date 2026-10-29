@@ -4,6 +4,7 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerWeaponMode))]
 public class PlayerZoom : MonoBehaviour
 {
+    [SerializeField] private GameObject _sniperZoom;  // 조준경 그림 (평소에는 꺼 둔다)
     [SerializeField] private GameObject _crosshair;   // 4장의 조준선
     [SerializeField] private float _normalFov = 60f;  // 평소 시야각
     [SerializeField] private float _zoomFov = 15f;    // 확대했을 때 시야각
@@ -24,5 +25,6 @@ public class PlayerZoom : MonoBehaviour
 
         Camera.main.fieldOfView = isZooming ? _zoomFov : _normalFov;
         _crosshair.SetActive(!isZooming);  // 확대하는 동안은 조준선을 숨긴다.
+        _sniperZoom.SetActive(isZooming);  // 확대하는 동안만 조준경을 씌운다.
     }
 }
