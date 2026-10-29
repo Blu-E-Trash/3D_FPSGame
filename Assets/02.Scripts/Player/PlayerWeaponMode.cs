@@ -8,6 +8,7 @@ public class PlayerWeaponMode : MonoBehaviour
 
     private WeaponMode _mode = WeaponMode.Normal;
     public WeaponMode Mode => _mode;  // 밖에서는 읽기만 한다.
+    public event System.Action<WeaponMode> OnModeChanged;  // 모드가 바뀌면 새 모드를 알린다.
 
     private void Start()
     {
@@ -37,6 +38,7 @@ public class PlayerWeaponMode : MonoBehaviour
     {
         _mode = mode;
         ShowMode();
+        OnModeChanged?.Invoke(mode);  // 모드가 바뀌었다고 알린다.
         Debug.Log($"무기 모드: {mode}");
     }
 

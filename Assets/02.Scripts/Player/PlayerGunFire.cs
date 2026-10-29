@@ -31,6 +31,7 @@ public class PlayerGunFire : MonoBehaviour
     public int CurrentAmmo => _currentAmmo;
     public int MaxAmmo => _maxAmmo;
     public bool IsReloading => _isReloading;
+    public event System.Action<int, int> OnBulletChanged;   // 총알 수가 바뀌면 (남은 수, 탄창 크기)를 알린다.
 
     private Animator _animator; // 군인 모델의 애니메이터
 
@@ -73,6 +74,7 @@ public class PlayerGunFire : MonoBehaviour
     {
         // 총알 한 발을 쓴다.
         _currentAmmo--;
+        OnBulletChanged?.Invoke(_currentAmmo, _maxAmmo);  // 한 발 줄었다고 알린다.
         GameLogger.Log($"남은 총알: {_currentAmmo} / {_maxAmmo}");
 
         // 3. 레이캐스트를 생성하고 발사될 위치와 진행 방향 설정하기
@@ -145,6 +147,7 @@ public class PlayerGunFire : MonoBehaviour
         yield return new WaitForSeconds(_reloadTime);
 
         _currentAmmo = _maxAmmo;
+        OnBulletChanged?.Invoke(_currentAmmo, _maxAmmo);  // 탄창을 채웠다고 알린다.
         _isReloading = false;
         GameLogger.Log("재장전 완료");
     }

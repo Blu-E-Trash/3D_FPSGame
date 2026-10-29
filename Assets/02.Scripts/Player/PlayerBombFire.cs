@@ -37,6 +37,7 @@ public class PlayerBombFire : MonoBehaviour
     public int MaxBombCount => _maxBombCount;
     public float ChargeRatio => _chargeTimer / _maxChargeTime; // 0 ~ 1, 힘 게이지 UI에 쓴다.
     public bool IsCharging => _isCharging;
+    public event System.Action<int> OnBombChanged;     // 폭탄 수가 바뀌면 남은 수를 알린다.
 
     private Animator _animator; // 군인 모델의 애니메이터
     private PlayerWeaponMode _weaponMode;
@@ -112,6 +113,7 @@ public class PlayerBombFire : MonoBehaviour
         bomb.Rigidbody.AddForce(Camera.main.transform.forward * throwForce, ForceMode.Impulse);
 
         _currentBombCount--;
+        OnBombChanged?.Invoke(_currentBombCount);  // 하나 줄었다고 알린다.
         GameLogger.Log($"폭탄 던짐 (힘: {throwForce:F1}) / 남은 폭탄: {_currentBombCount} / {_maxBombCount}");
     }
 
@@ -119,5 +121,6 @@ public class PlayerBombFire : MonoBehaviour
     public void AddBomb(int amount)
     {
         _currentBombCount = Mathf.Min(_currentBombCount + amount, _maxBombCount);
+        OnBombChanged?.Invoke(_currentBombCount);  // 채웠다고 알린다.
     }
 }
