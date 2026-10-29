@@ -23,7 +23,7 @@ public class PlayerWeaponMode : MonoBehaviour
             return;
         }
 
-        // 숫자 키 1은 일반 모드, 2는 저격 모드
+        // 숫자 키 1은 일반 모드, 2는 저격 모드, 3은 근접 모드
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
             ChangeMode(WeaponMode.Normal);
@@ -31,6 +31,10 @@ public class PlayerWeaponMode : MonoBehaviour
         else if (Input.GetKeyDown(KeyCode.Alpha2))
         {
             ChangeMode(WeaponMode.Sniper);
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha3))
+        {
+            ChangeMode(WeaponMode.Melee);
         }
     }
 
@@ -52,6 +56,9 @@ public class PlayerWeaponMode : MonoBehaviour
                 break;
             case WeaponMode.Sniper:
                 _modeText.text = "저격 모드";
+                break;
+            case WeaponMode.Melee:
+                _modeText.text = "근접 모드";
                 break;
         }
     }

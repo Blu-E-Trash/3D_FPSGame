@@ -835,23 +835,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 655260d06fb543b8a2e484ced918293a, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 655260d06fb543b8a2e484ced918293a, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 655260d06fb543b8a2e484ced918293a, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 655260d06fb543b8a2e484ced918293a, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 655260d06fb543b8a2e484ced918293a, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
+      value: 180
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 655260d06fb543b8a2e484ced918293a, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
@@ -1106,6 +1106,7 @@ GameObject:
   - component: {fileID: 3600000002}
   - component: {fileID: 3700000100}
   - component: {fileID: 3700000200}
+  - component: {fileID: 3900000100}
   m_Layer: 7
   m_Name: Player
   m_TagString: Player
@@ -6787,6 +6788,7 @@ MonoBehaviour:
   _modeIcons:
   - {fileID: 21300000, guid: f7a38439b6ac4c4bb2aa29f2f2206090, type: 3}
   - {fileID: 21300000, guid: 17ad7b81a8b7400a9c1406292a31d31a, type: 3}
+  - {fileID: 21300000, guid: 1a5d55a5fd9e4f5e9094e1d05d189574, type: 3}
   _bulletText: {fileID: 3800000203}
   _bombText: {fileID: 3800000303}
   _weaponMode: {fileID: 3700000100}
@@ -7228,6 +7230,21 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &3900000100
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 941263692}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eed793dda54440b7a4946ddec46709c9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerMeleeAttack
+  _weapon: {fileID: 3900000000}
+  _fadeStart: 0.7
+  _fadeTime: 0.2
 --- !u!1001 &3116894794550496600
 PrefabInstance:
   m_ObjectHideFlags: 0
