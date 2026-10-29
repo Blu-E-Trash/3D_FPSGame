@@ -1,11 +1,14 @@
 using UnityEngine;
 
-// 근접 모드에서 마우스 오른쪽 버튼을 누르면 왼손으로 환도를 휘두른다.
+// 근접 모드에서 마우스 오른쪽 버튼을 누르면 왼손으로 환도를 휘둘러, 칼날에 닿은 대상에 대미지를 준다.
 [RequireComponent(typeof(PlayerWeaponMode))]
 public class PlayerMeleeAttack : MonoBehaviour
 {
     private const string MeleeLayerName = "Melee Layer";
     private const string MeleeTrigger = "Melee";
+
+    [Header("공격")]
+    [SerializeField] private float _damage = 25f;                      // 대미지
 
     [Header("환도")]
     [SerializeField] private GameObject _weapon;                       // 왼손 뼈 아래의 Hwando
@@ -88,5 +91,41 @@ public class PlayerMeleeAttack : MonoBehaviour
     public void DeactivateCollider()
     {
         _weaponCollider.enabled = false;
+    }
+
+    // 칼날에 무언가가 닿으면 MeleeWeapon이 불러 준다.
+    public void Hit(Collider other)
+    {
+        // 1. 내 몸(Player와 그 자식)에 닿은 것은 무시한다.
+        if (other.transform.IsChildOf(transform))
+        {
+            return;
+        }
+
+        // 2. 대미지를 받을 수 없으면 무시한다. (콜라이더가 자식에 붙어 있을 수도 있으니 부모까지 찾아본다)
+        IDamageable damageable = other.GetComponentInParent<IDamageable>();
+        if (damageable == null)
+        {
+            return;
+        }
+
+        // 3. 한 번 휘두를 때 하나만 맞힌다. 칼날을 바로 끈다.
+        DeactivateCollider();
+
+        // 4. 대상에서 플레이어에 가장 가까운 점을 맞은 자리로 삼아 대미지를 준다.
+        Vector3 hitPoint = other.ClosestPoint(transform.position);
+        GiveDamage(damageable, hitPoint);
+    }
+
+    // 대미지 정보를 만들어 넘긴다. 맞은 자리의 방향은 플레이어 쪽이다.
+    private void GiveDamage(IDamageable damageable, Vector3 hitPoint)
+    {
+        DamageInfo damageInfo = new DamageInfo
+        {
+            Value = _damage,
+            HitPoint = hitPoint,
+            HitNormal = (transform.position - hitPoint).normalized,
+        };
+        damageable.TakeDamage(damageInfo);
     }
 }
