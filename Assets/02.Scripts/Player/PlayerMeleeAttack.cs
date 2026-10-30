@@ -17,6 +17,12 @@ public class PlayerMeleeAttack : MonoBehaviour
     [SerializeField] private LayerMask _targetMask;                          // 때릴 대상 (Default, Drum)
     [SerializeField] private LayerMask _obstacleMask;                        // 가로막는 것 (Default)
 
+    [Header("베기 이펙트")]
+    [SerializeField] private GameObject _slashEffectPrefab;                          // 휘두를 때 보여 줄 이펙트 (Slash_Ink)
+    [SerializeField] private Vector3 _slashEffectOffset = new Vector3(0f, -0.3f, 1f); // 카메라 기준 위치 (앞으로 1m, 조금 아래)
+    [SerializeField] private Vector3 _slashEffectRotation = Vector3.zero;             // 카메라 기준 추가 회전 (도)
+    [SerializeField] private float _slashEffectLifetime = 1.5f;                      // 이펙트를 지우기까지의 시간 (초)
+
     [Header("환도")]
     [SerializeField] private GameObject _weapon;                       // 왼손 뼈 아래의 Hwando
     [SerializeField, Range(0f, 1f)] private float _fadeStart = 0.85f;  // 동작이 이만큼 지나면 팔을 돌려놓기 시작한다. (0~1)
@@ -164,6 +170,12 @@ public class PlayerMeleeAttack : MonoBehaviour
                 continue;
             }
 
+            // 바닥, 벽 같은 볼록하지 않은 MeshCollider는 ClosestPoint를 쓸 수 없고 대미지도 받지 않으므로 건너뛴다.
+            if (col is MeshCollider meshCollider && meshCollider.convex == false)
+            {
+                continue;
+            }
+
             // 2. 대상에서 플레이어에 가장 가까운 점을 맞을 자리로 삼는다.
             Vector3 hitPoint = col.ClosestPoint(origin);
 
@@ -214,5 +226,22 @@ public class PlayerMeleeAttack : MonoBehaviour
             Gizmos.DrawLine(previous, next);
             previous = next;
         }
+    }
+
+    // 베기 이펙트를 카메라 앞에 만든다. 휘두르는 동작의 PlaySlashEffect 이벤트가 불러 준다.
+    public void PlaySlashEffect()
+    {
+        if (_slashEffectPrefab == null)
+        {
+            return;
+        }
+
+        // 카메라가 보는 방향 기준으로 위치와 방향을 정해서, 어디를 보고 휘둘러도 눈앞에 보이게 한다.
+        Transform cameraTransform = Camera.main.transform;
+        Vector3 position = cameraTransform.TransformPoint(_slashEffectOffset);
+        Quaternion rotation = cameraTransform.rotation * Quaternion.Euler(_slashEffectRotation);
+
+        GameObject effect = Instantiate(_slashEffectPrefab, position, rotation);
+        Destroy(effect, _slashEffectLifetime);  // 다 보여 준 뒤 스스로 지운다.
     }
 }

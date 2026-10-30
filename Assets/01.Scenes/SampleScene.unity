@@ -7268,6 +7268,10 @@ MonoBehaviour:
   _obstacleMask:
     serializedVersion: 2
     m_Bits: 1
+  _slashEffectPrefab: {fileID: 8587560481101609250, guid: 2204f06b178af014986bf95a7bda8e6e, type: 3}
+  _slashEffectOffset: {x: 0, y: -0.2, z: 0.4}
+  _slashEffectRotation: {x: 0, y: 180, z: 0}
+  _slashEffectLifetime: 1.5
   _weapon: {fileID: 3900000000}
   _fadeStart: 0.85
   _fadeTime: 0.2

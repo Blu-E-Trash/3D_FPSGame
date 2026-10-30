@@ -28,4 +28,10 @@ public class PlayerMeleeEvent : MonoBehaviour
     {
         _meleeAttack.FanAttack();
     }
+
+    // MeleeSwing 동작에서 베기 시작할 때 불린다. (베기 이펙트)
+    public void PlaySlashEffect()
+    {
+        _meleeAttack.PlaySlashEffect();
+    }
 }
