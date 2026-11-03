@@ -64,11 +64,16 @@ public class PlayerBombFire : MonoBehaviour
             // 힘을 모으던 중에 모드를 바꿨으면 던지지 않고 취소한다.
             if (_isCharging)
             {
-                _isCharging = false;
-                _chargeTimer = 0f;
-                _animator.SetBool(IsChargingBombParameter, false);
+                CancelCharge();
             }
             return;
+        }
+
+        // 일시정지 중에 버튼을 떼면 "떼는 순간"을 놓쳐서 팔을 든 채로 남는다.
+        // 다시 돌아왔을 때 버튼을 누르고 있지 않으면 던지지 않고 취소한다.
+        if (_isCharging && Input.GetButton("Fire2") == false && Input.GetButtonUp("Fire2") == false)
+        {
+            CancelCharge();
         }
 
         // 1. 오른쪽 버튼을 누르는 순간 && 텀이 끝났고 && 폭탄이 남아 있으면 힘 모으기를 시작한다.
@@ -99,6 +104,14 @@ public class PlayerBombFire : MonoBehaviour
             _chargeTimer = 0f;
             _cooldownTimer = _throwCooldown; // 던졌으니 잠깐 텀을 둔다.
         }
+    }
+
+    // 힘 모으기를 던지지 않고 취소한다. (팔도 내린다)
+    private void CancelCharge()
+    {
+        _isCharging = false;
+        _chargeTimer = 0f;
+        _animator.SetBool(IsChargingBombParameter, false);
     }
 
     private void Throw(float throwForce)
