@@ -20,7 +20,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 
     [SerializeField] private TextMeshProUGUI _stateText; // 화면 가운데에 상태를 알려주는 글자 (준비, 시작!)
     [SerializeField] private Animator _playerAnimator;     // 게임오버 때 군인을 서 있는 동작으로 돌리기 위해
-    [SerializeField] private GameObject _pausePanel;       // ESC를 누르면 켜지는 일시정지 창
+    [SerializeField] private UI_PausePopup _pausePopup;    // ESC를 누르면 켜지는 일시정지 창
 
     protected override void Awake()
     {
@@ -37,9 +37,9 @@ public class GameManager : SingletonBehaviour<GameManager>
     private void Start()
     {
         // 일시정지 창은 처음에 꺼 둔다.
-        if (_pausePanel != null)
+        if (_pausePopup != null)
         {
-            _pausePanel.SetActive(false);
+            _pausePopup.Hide();
         }
 
         StartCoroutine(StartSequence_Coroutine());
@@ -95,9 +95,9 @@ public class GameManager : SingletonBehaviour<GameManager>
             CursorManager.Instance.UnlockCursor();
         }
 
-        if (_pausePanel != null)
+        if (_pausePopup != null)
         {
-            _pausePanel.SetActive(true);
+            _pausePopup.Show();
         }
     }
 
@@ -106,9 +106,9 @@ public class GameManager : SingletonBehaviour<GameManager>
     {
         if (_state != GameState.Pause) return;
 
-        if (_pausePanel != null)
+        if (_pausePopup != null)
         {
-            _pausePanel.SetActive(false);
+            _pausePopup.Hide();
         }
 
         Time.timeScale = 1f;
