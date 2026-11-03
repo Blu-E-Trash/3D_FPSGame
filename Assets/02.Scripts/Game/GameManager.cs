@@ -21,6 +21,7 @@ public class GameManager : SingletonBehaviour<GameManager>
     [SerializeField] private TextMeshProUGUI _stateText; // 화면 가운데에 상태를 알려주는 글자 (준비, 시작!)
     [SerializeField] private Animator _playerAnimator;     // 게임오버 때 군인을 서 있는 동작으로 돌리기 위해
     [SerializeField] private UI_PausePopup _pausePopup;    // ESC를 누르면 켜지는 일시정지 창
+    [SerializeField] private UI_GameOverPopup _gameOverPopup; // 플레이어가 죽으면 켜지는 게임오버 창
 
     protected override void Awake()
     {
@@ -36,10 +37,15 @@ public class GameManager : SingletonBehaviour<GameManager>
 
     private void Start()
     {
-        // 일시정지 창은 처음에 꺼 둔다.
+        // 일시정지 창과 게임오버 창은 처음에 꺼 둔다.
         if (_pausePopup != null)
         {
             _pausePopup.Hide();
+        }
+
+        if (_gameOverPopup != null)
+        {
+            _gameOverPopup.Hide();
         }
 
         StartCoroutine(StartSequence_Coroutine());
@@ -141,7 +147,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 #endif
     }
 
-    // 게임 오버: 모든 조작을 멈추고 화면에 "게임오버"를 띄운다.
+    // 게임 오버: 모든 조작을 멈추고 게임오버 창을 띄운다.
     public void GameOver()
     {
         _state = GameState.GameOver;
@@ -159,8 +165,10 @@ public class GameManager : SingletonBehaviour<GameManager>
             _playerAnimator.SetFloat("MoveMotion", 0f);
         }
 
-        _stateText.gameObject.SetActive(true);
-        _stateText.text = "게임오버";
-        _stateText.color = Color.red;
+        // 다시 시작 / 게임 종료를 고를 수 있는 게임오버 창을 띄운다.
+        if (_gameOverPopup != null)
+        {
+            _gameOverPopup.Show();
+        }
     }
 }
