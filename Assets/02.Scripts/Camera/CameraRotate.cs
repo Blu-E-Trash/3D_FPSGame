@@ -33,8 +33,6 @@ public class CameraRotate : MonoBehaviour
         // 1. 마우스 입력을 받아온다.
         float mouseY = Input.GetAxis("Mouse Y");
 
-        GameLogger.Log($"Mouse Y: {mouseY}");
-
         // 2. 위아래 회전값을 누적하고 -89도 ~ 89도로 제한한다.
         // transform.eulerAngles는 0~360도로 돌려주기 때문에(-1도 -> 359도) 내 변수에서 먼저 제한한다.
         _acculationY += mouseY * _mouseSensitivity;

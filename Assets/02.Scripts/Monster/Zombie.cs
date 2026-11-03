@@ -311,7 +311,7 @@ public class Zombie : MonoBehaviour, IDamageable
     {
         _currentState?.Exit();
 
-        Debug.Log($"{_stateType} -> {nextState}");
+        GameLogger.Log($"{_stateType} -> {nextState}"); // 빌드에서 ENABLE_LOG를 빼면 문자열 생성까지 함께 사라진다.
         _stateType = nextState;
         _currentState = _states[nextState];
 
