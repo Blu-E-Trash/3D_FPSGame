@@ -13,41 +13,25 @@ public enum GameState
 }
 
 // 게임 전체의 상태를 관리한다. 씬에 하나만 존재한다. (싱글톤)
-public class GameManager : MonoBehaviour
+public class GameManager : SingletonBehaviour<GameManager>
 {
-    private static GameManager _instance = null;
-    public static GameManager Instance => _instance;
-
     private GameState _state = GameState.Ready;
     public GameState State => _state;
 
     [SerializeField] private TextMeshProUGUI _stateText; // 화면 가운데에 상태를 알려주는 글자 (준비, 시작!)
-    [SerializeField] private CursorManager _cursorManager; // 게임오버 때 마우스 커서를 풀어주기 위해
     [SerializeField] private Animator _playerAnimator;     // 게임오버 때 군인을 서 있는 동작으로 돌리기 위해
     [SerializeField] private GameObject _pausePanel;       // ESC를 누르면 켜지는 일시정지 창
 
-    private void Awake()
+    protected override void Awake()
     {
-        // 이미 게임 매니저가 있으면 나는 사라진다. (하나만 존재하도록)
-        if (_instance != null)
-        {
-            Destroy(gameObject);
-            return;
-        }
+        base.Awake(); // 싱글톤 처리 (이미 있으면 나는 사라진다)
 
-        _instance = this;
+        // 내가 진짜 게임 매니저가 아니면(중복이라 사라지는 중이면) 여기서 멈춘다.
+        if (Instance != this) return;
 
         // 다시 시작으로 씬을 새로 불러왔을 때를 대비해 시간과 소리를 원래대로 돌려 놓는다.
         Time.timeScale = 1f;
         AudioListener.pause = false;
-    }
-
-    private void OnDestroy()
-    {
-        if (_instance == this)
-        {
-            _instance = null;
-        }
     }
 
     private void Start()
@@ -106,9 +90,9 @@ public class GameManager : MonoBehaviour
         AudioListener.pause = true;
 
         // 마우스 커서를 풀어서 버튼을 누를 수 있게 한다.
-        if (_cursorManager != null)
+        if (CursorManager.Instance != null)
         {
-            _cursorManager.UnlockCursor();
+            CursorManager.Instance.UnlockCursor();
         }
 
         if (_pausePanel != null)
@@ -130,9 +114,9 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 1f;
         AudioListener.pause = false;
 
-        if (_cursorManager != null)
+        if (CursorManager.Instance != null)
         {
-            _cursorManager.LockCursor();
+            CursorManager.Instance.LockCursor();
         }
 
         _state = GameState.Playing;
@@ -163,9 +147,9 @@ public class GameManager : MonoBehaviour
         _state = GameState.GameOver;
 
         // 마우스 커서를 풀어서 화면의 버튼 등을 누를 수 있게 한다.
-        if (_cursorManager != null)
+        if (CursorManager.Instance != null)
         {
-            _cursorManager.UnlockCursor();
+            CursorManager.Instance.UnlockCursor();
         }
 
         // 플레이어는 게임 중이 아니면 움직임 처리를 멈추니까, 달리던 중이었으면 계속 제자리에서 달리게 된다.

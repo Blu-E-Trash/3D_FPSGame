@@ -3,10 +3,16 @@ using UnityEngine;
 // 마우스 커서를 화면 가운데에 잠그고 숨긴다.
 // 게임 중에 왼쪽 Alt를 누르고 있는 동안에는 커서를 풀어서 UI(미니맵 버튼 등)를 누를 수 있다.
 // 게임 중에 잠금이 풀려 있으면(에디터의 ESC, 창 전환 등) 다시 잠근다.
-public class CursorManager : MonoBehaviour
+// 씬에 하나만 존재한다. (싱글톤) 다른 스크립트에서는 CursorManager.Instance로 쓴다.
+public class CursorManager : SingletonBehaviour<CursorManager>
 {
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake(); // 싱글톤 처리 (이미 있으면 나는 사라진다)
+
+        // 내가 진짜 커서 매니저가 아니면(중복이라 사라지는 중이면) 여기서 멈춘다.
+        if (Instance != this) return;
+
         LockCursor();
     }
 
