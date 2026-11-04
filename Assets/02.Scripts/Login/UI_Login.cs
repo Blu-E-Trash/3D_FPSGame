@@ -1,7 +1,6 @@
 using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 // 로그인 화면. 로그인 모드와 회원가입 모드를 바꾸고, 입력을 확인해 AccountStorage에 부탁한다.
@@ -78,7 +77,9 @@ public class UI_Login : MonoBehaviour
             return;
         }
 
-        SceneManager.LoadScene(_gameSceneName);
+        // 게임 씬은 무거워서 바로 불러오면 화면이 멈춘다.
+        // 로딩 씬을 먼저 띄우고, 그곳에서 게임 씬을 비동기(LoadSceneAsync)로 불러온다.
+        LoadingSceneController.LoadScene(_gameSceneName);
     }
 
     // 회원가입: 입력을 확인하고, 문제가 없으면 계정을 저장한 뒤 로그인 모드로 돌아간다.
