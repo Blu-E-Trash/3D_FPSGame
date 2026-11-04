@@ -134,7 +134,8 @@ public class GameManager : SingletonBehaviour<GameManager>
         Time.timeScale = 1f;
         AudioListener.pause = false;
 
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        // 로딩 화면을 지나 지금 씬을 처음부터 다시 불러온다.
+        LoadingSceneController.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     // 게임 종료: 에디터에서는 플레이를 멈추고, 빌드된 게임에서는 프로그램을 끈다.
