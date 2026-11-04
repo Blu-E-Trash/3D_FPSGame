@@ -236,19 +236,30 @@ public static class LoginSceneBuilder
 
         var signupView = UI("SignupView", panel); Stretch(signupView);
         var signupGroup = signupView.gameObject.AddComponent<CanvasGroup>();
-        Field("IdField", signupView, "아이디", false, -40);
+        var regIdField = Field("IdField", signupView, "아이디", false, -40);
         Field("NicknameField", signupView, "닉네임", false, -122);
-        Field("PasswordField", signupView, "비밀번호", true, -204);
-        Field("PasswordConfirmField", signupView, "비밀번호 확인", true, -286);
+        var regPwField = Field("PasswordField", signupView, "비밀번호", true, -204);
+        var regPw2Field = Field("PasswordConfirmField", signupView, "비밀번호 확인", true, -286);
         var signupRow = Row("Buttons", signupView, -386);
-        BracketButton("JoinButton", signupRow, "가입하기", 0);
+        var joinBtn = BracketButton("JoinButton", signupRow, "가입하기", 0);
         var backBtn = BracketButton("BackButton", signupRow, "돌아가기", 1);
 
         var viewSwitch = panel.gameObject.AddComponent<UI_LoginViewSwitch>();
         Set(viewSwitch, "_frame", panel); Set(viewSwitch, "_login", loginGroup); Set(viewSwitch, "_signup", signupGroup);
-        UnityEventTools.AddPersistentListener(toSignupBtn.onClick, new UnityAction(viewSwitch.ShowSignup));
-        UnityEventTools.AddPersistentListener(backBtn.onClick, new UnityAction(viewSwitch.ShowLogin));
         signupView.gameObject.SetActive(false);
+
+        // 26.4: 안내 글자(단말기 창 바로 아래)와 UI_Login. 버튼 네 개는 UI_Login이 Start에서 연결한다.
+        var message = Text("MessageText", panel, "", 24, G, TextAlignmentOptions.Center, _font);
+        Place(message.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 1f), new Vector2(0, -16), new Vector2(900, 36));
+        var login = panel.gameObject.AddComponent<UI_Login>();
+        Set(login, "_loginIdInput", idField.GetComponent<TMP_InputField>());
+        Set(login, "_loginPasswordInput", pwField.GetComponent<TMP_InputField>());
+        Set(login, "_registerIdInput", regIdField.GetComponent<TMP_InputField>());
+        Set(login, "_registerPasswordInput", regPwField.GetComponent<TMP_InputField>());
+        Set(login, "_passwordConfirmInput", regPw2Field.GetComponent<TMP_InputField>());
+        Set(login, "_loginButton", loginBtn); Set(login, "_gotoRegisterButton", toSignupBtn);
+        Set(login, "_registerButton", joinBtn); Set(login, "_gotoLoginButton", backBtn);
+        Set(login, "_viewSwitch", viewSwitch); Set(login, "_messageText", message);
 
         // 8) 인트로용 검은 화면
         var black = Img("Blackout", canvasRt, Color.black);
