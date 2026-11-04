@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -26,6 +27,16 @@ public class UI_Login : MonoBehaviour
     [SerializeField] private UI_LoginViewSwitch _viewSwitch;        // 로그인 화면 ↔ 회원가입 화면 전환
     [SerializeField] private TextMeshProUGUI _messageText;          // 안내 글자
     [SerializeField] private string _gameSceneName = "SampleScene"; // 로그인하면 불러올 씬
+
+    // 아이디 규칙: 이메일
+    // (영문, 숫자, ., _, -)@(영문, 숫자, -)(.영문, 숫자, -)를 1번 이상. 예) abc.def@gmail.com, user_01@mail.co.kr
+    private static readonly Regex EmailRegex = new Regex(@"^[A-Za-z0-9._-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$");
+
+    // 비밀번호 규칙: 대문자, 소문자, 숫자, 기호를 모두 포함한 8~30 글자
+    // 전방탐색 (?=...)으로 대문자, 소문자, 숫자, 기호가 각각 하나 이상 있는지 보고,
+    // 전체는 공백을 뺀 ASCII 출력 문자([!-~]) 8~30 글자인지 본다.
+    // 기호 = [!-/] [:-@] [\[-`] [{-~] (ASCII 출력 문자 중 영문·숫자가 아닌 범위)
+    private static readonly Regex PasswordRegex = new Regex(@"^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[!-/:-@\[-`{-~])[!-~]{8,30}$");
 
     private void Start()
     {
@@ -80,6 +91,20 @@ public class UI_Login : MonoBehaviour
         if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(password))
         {
             _messageText.text = "아이디와 비밀번호를 입력해 주세요.";
+            return;
+        }
+
+        // 아이디 규칙: 이메일
+        if (!EmailRegex.IsMatch(id))
+        {
+            _messageText.text = "아이디는 이메일 형식이어야 합니다.";
+            return;
+        }
+
+        // 비밀번호 규칙: 대문자, 소문자, 숫자, 기호를 모두 포함한 8~30 글자
+        if (!PasswordRegex.IsMatch(password))
+        {
+            _messageText.text = "비밀번호는 대문자, 소문자, 숫자, 기호를 모두 포함한 8~30 글자여야 합니다.";
             return;
         }
 
